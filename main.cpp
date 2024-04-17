@@ -21,7 +21,7 @@ public:
         // Load empty texture
         empty_texture = LoadTexture("empty.png");
 
-        // Allocate memory for texture array
+        // Allocate memory for array
         Tex_arr = new Texture * [rows];
         for (int i = 0; i < rows; i++) {
             Tex_arr[i] = new Texture[cols];
