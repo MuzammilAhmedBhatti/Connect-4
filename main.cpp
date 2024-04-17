@@ -21,19 +21,16 @@ public:
         // Load empty texture
         empty_texture = LoadTexture("empty.png");
 
-        // Allocate memory for array
         Tex_arr = new Texture * [rows];
         for (int i = 0; i < rows; i++) {
             Tex_arr[i] = new Texture[cols];
         }
 
-        // Initialize game board with empty textures
         InitializeGameBoard();
     }
 
     // Destructor to deallocate memory
     ~GameBoard() {
-        // Deallocate memory for texture array
         for (int i = 0; i < rows; i++) {
             delete[] Tex_arr[i];
         }
@@ -51,8 +48,8 @@ public:
 
     // Function to draw the game board
     void Draw() {
-        float texture_width = GetScreenWidth() / static_cast<float>(cols); // Width of each texture
-        float texture_height = GetScreenHeight() / static_cast<float>(rows); // Height of each texture
+        float texture_width = GetScreenWidth() / static_cast<float>(cols);//Width of each Texture
+        float texture_height = GetScreenHeight() / static_cast<float>(rows);//Height of each Texture
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
