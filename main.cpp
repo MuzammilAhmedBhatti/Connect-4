@@ -3,6 +3,10 @@
 
 using namespace std;
 
+bool Checking() {
+    return true;
+}
+
 class GameArray {
 public:
     int number;
@@ -80,6 +84,34 @@ public:
 //Inheritance
 class Turn : public GameBoard {
     //Turn Logic goes here
+    Texture** texArr = getTexture2DArray();
+    int rows = getRows();
+    int cols = getCols();
+    Texture emptyTexture = getEmptyTexture();
+
+    Turn() {
+
+        Texture yellowTex = LoadTexture("yellow.png");
+        Texture redTex = LoadTexture("red.png");
+
+        texArr = new Texture * [rows];
+        for (int i = 0; i < rows; i++) {
+            texArr[i] = new Texture[cols];
+        }
+
+    }
+
+    ~Turn() {
+        for (int i = 0; i < rows; i++) {
+            delete[] texArr[i];
+        }
+        delete[] texArr;
+    }
+
+
+
+
+
 };
 
 
