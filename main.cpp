@@ -28,6 +28,22 @@ public:
 
         InitializeGameBoard();
     }
+    //Encapsulation
+    int getRows() {
+        return rows;
+    }
+
+    int getCols() {
+        return cols;
+    }
+
+    Texture getEmptyTexture() {
+        return empty_texture;
+    }
+
+    Texture** getTexture2DArray() {
+        return Tex_arr;
+    }
 
     // Destructor to deallocate memory
     ~GameBoard() {
@@ -59,6 +75,11 @@ public:
             }
         }
     }
+};
+
+//Inheritance
+class Turn : public GameBoard {
+    //Turn Logic goes here
 };
 
 
