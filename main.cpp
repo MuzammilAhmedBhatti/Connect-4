@@ -83,9 +83,8 @@ public:
         float texture_size = min(texture_width, texture_height);
 
         float texture_position_x = -1 * (GetScreenWidth() / 2 - ((texture_size / 2) * COLS));
-        // float texture_position_y = GetScreenHeight() / 2 - texture_height / 2;
 
-        //float texture_position_x = -1 * (GetScreenWidth() / 5);
+        //float texturre_position_x = -1 * (GetScreenWidth() / 5);
         //float texture_position_y = 0;
 
         Rectangle source_rec = { 0, 0, static_cast<float>(empty_texture.width), static_cast<float>(empty_texture.height) };
