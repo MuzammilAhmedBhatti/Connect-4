@@ -15,8 +15,9 @@ public:
 
 class GameBoard {
 private:
-    int rows = 6;
-    int cols = 7;
+    const int ROWS = 6;
+    const int COLS = 7;
+    int* row = new int[COLS];
     Texture empty_texture;
     Texture** Tex_arr;
 
@@ -25,20 +26,24 @@ public:
         // Load empty texture
         empty_texture = LoadTexture("empty.png");
 
-        Tex_arr = new Texture * [rows];
-        for (int i = 0; i < rows; i++) {
-            Tex_arr[i] = new Texture[cols];
+        Tex_arr = new Texture * [ROWS];
+        for (int i = 0; i < ROWS; i++) {
+            Tex_arr[i] = new Texture[COLS];
+        }
+
+        for (int i = 0; i < COLS; i++) {
+            row[i] = ROWS - 1;
         }
 
         InitializeGameBoard();
     }
     //Encapsulation
     int getRows() {
-        return rows;
+        return ROWS;
     }
 
     int getCols() {
-        return cols;
+        return COLS;
     }
 
     Texture getEmptyTexture() {
@@ -51,42 +56,58 @@ public:
 
     // Destructor to deallocate memory
     ~GameBoard() {
-        for (int i = 0; i < rows; i++) {
+        for (int i = 0; i < ROWS; i++) {
             delete[] Tex_arr[i];
         }
         delete[] Tex_arr;
+        delete[]row;
     }
 
     // Function to initialize game board with empty textures
     void InitializeGameBoard() {
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
+        for (int i = 0; i < ROWS; i++) {
+            for (int j = 0; j < COLS; j++) {
                 Tex_arr[i][j] = empty_texture;
             }
         }
     }
 
+    Texture yellowTex = LoadTexture("yellow.png");
+    Texture redTex = LoadTexture("red.png");
+
     // Function to draw the game board
     void Draw() {
-        float texture_width = GetScreenWidth() / static_cast<float>(cols);//Width of each Texture
-        float texture_height = GetScreenHeight() / static_cast<float>(rows);//Height of each Texture
+        float texture_width = GetScreenWidth() / static_cast<float>(COLS);//Width of each Texture
+        float texture_height = GetScreenHeight() / static_cast<float>(ROWS);//Height of each Texture
 
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                Rectangle source_rec = { 0, 0, static_cast<float>(empty_texture.width), static_cast<float>(empty_texture.height) };
-                Rectangle dest_rec = { j * texture_width, i * texture_height , texture_width,texture_height };
-                DrawTexturePro(Tex_arr[i][j], source_rec, dest_rec, Vector2{ 0.0f, 0.0f }, 0.0f, WHITE);
+        float texture_size = min(texture_width, texture_height);
+
+        float texture_position_x = -1 * (GetScreenWidth() / 2 - ((texture_size / 2) * COLS));
+        // float texture_position_y = GetScreenHeight() / 2 - texture_height / 2;
+
+        //float texture_position_x = -1 * (GetScreenWidth() / 5);
+        //float texture_position_y = 0;
+
+        Rectangle source_rec = { 0, 0, static_cast<float>(empty_texture.width), static_cast<float>(empty_texture.height) };
+
+        for (int i = 0; i < ROWS; i++) {
+            for (int j = 0; j < COLS; j++) {
+                Rectangle dest_rec = { j * texture_size, i * texture_size , texture_size,texture_size };
+                DrawTexturePro(Tex_arr[i][j], source_rec, dest_rec, Vector2{ texture_position_x, 0.0f }, 0.0f, WHITE);
             }
         }
     }
 };
 
+class twoPlayer : public GameBoard {
+
+};
 //Inheritance
 class Turn : public GameBoard {
     //Turn Logic goes here
     Texture** texArr = getTexture2DArray();
-    int rows = getRows();
-    int cols = getCols();
+    int ROWS = getRows();
+    int COLS = getCols();
     Texture emptyTexture = getEmptyTexture();
 
     Turn() {
@@ -94,15 +115,15 @@ class Turn : public GameBoard {
         Texture yellowTex = LoadTexture("yellow.png");
         Texture redTex = LoadTexture("red.png");
 
-        texArr = new Texture * [rows];
-        for (int i = 0; i < rows; i++) {
-            texArr[i] = new Texture[cols];
+        texArr = new Texture * [ROWS];
+        for (int i = 0; i < ROWS; i++) {
+            texArr[i] = new Texture[COLS];
         }
 
     }
 
     ~Turn() {
-        for (int i = 0; i < rows; i++) {
+        for (int i = 0; i < ROWS; i++) {
             delete[] texArr[i];
         }
         delete[] texArr;
@@ -205,13 +226,13 @@ int main() {
 
                     cout << "DOUBLE TROUBLE" << endl;
 
-                    GameBoard game;
+                    twoPlayer twoPlayerGame;
 
                     while (!WindowShouldClose()) {
                         BeginDrawing();
                         ClearBackground(RAYWHITE);
 
-                        game.Draw();
+                        twoPlayerGame.Draw();
 
                         EndDrawing();
                         //hello
