@@ -79,60 +79,60 @@ public:
     void Draw() {
         float texture_width = GetScreenWidth() / static_cast<float>(COLS);//Width of each Texture
         float texture_height = GetScreenHeight() / static_cast<float>(ROWS);//Height of each Texture
-
         float texture_size = min(texture_width, texture_height);
-
-        float texture_position_x = -1 * (GetScreenWidth() / 2 - ((texture_size / 2) * COLS));
-
-        //float texturre_position_x = -1 * (GetScreenWidth() / 5);
-        //float texture_position_y = 0;
+        float texture_position_x = (GetScreenWidth() / 2 - ((texture_size / 2) * COLS));
+        float texture_position_y = (GetScreenHeight() / 2 - ((texture_size / 2) * ROWS));
 
         Rectangle source_rec = { 0, 0, static_cast<float>(empty_texture.width), static_cast<float>(empty_texture.height) };
 
         for (int i = 0; i < ROWS; i++) {
             for (int j = 0; j < COLS; j++) {
-                Rectangle dest_rec = { j * texture_size, i * texture_size , texture_size,texture_size };
-                DrawTexturePro(Tex_arr[i][j], source_rec, dest_rec, Vector2{ texture_position_x, 0.0f }, 0.0f, WHITE);
+                Rectangle dest_rec = { texture_position_x + (j * texture_size),texture_position_y + (i * texture_size) , texture_size,texture_size };
+                DrawTexturePro(Tex_arr[i][j], source_rec, dest_rec, Vector2{ 0.0f, 0.0f }, 0.0f, WHITE);
             }
+        }
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            Vector2 mousePos = GetMousePosition();
+            int column_number = static_cast<int>((mousePos.x - texture_position_x) / texture_size);
+            if (mousePos.x < ((GetScreenWidth() / 2 - ((texture_size / 2) * COLS)))) column_number = -1;
+            else if (mousePos.x > ((GetScreenWidth() / 2 + ((texture_size / 2) * COLS))))column_number = -1;
+            cout << "\ncolumn number = " << column_number << endl;
         }
     }
 };
 
 class twoPlayer : public GameBoard {
-
-};
-//Inheritance
-class Turn : public GameBoard {
-    //Turn Logic goes here
-    Texture** texArr = getTexture2DArray();
-    int ROWS = getRows();
-    int COLS = getCols();
-    Texture emptyTexture = getEmptyTexture();
-
-    Turn() {
-
-        Texture yellowTex = LoadTexture("yellow.png");
-        Texture redTex = LoadTexture("red.png");
-
-        texArr = new Texture * [ROWS];
-        for (int i = 0; i < ROWS; i++) {
-            texArr[i] = new Texture[COLS];
-        }
-
+public:
+    twoPlayer() {
     }
-
-    ~Turn() {
-        for (int i = 0; i < ROWS; i++) {
-            delete[] texArr[i];
-        }
-        delete[] texArr;
-    }
-
-
-
-
-
 };
+// //Inheritance
+// class Turn : public GameBoard {
+//     //Turn Logic goes here
+//     Texture** texArr = getTexture2DArray();
+//     int ROWS = getRows();
+//     int COLS = getCols();
+//     Texture emptyTexture = getEmptyTexture();
+
+//     Turn() {
+
+//         Texture yellowTex = LoadTexture("yellow.png");
+//         Texture redTex = LoadTexture("red.png");
+
+//         texArr = new Texture * [ROWS];
+//         for (int i = 0; i < ROWS; i++) {
+//             texArr[i] = new Texture[COLS];
+//         }
+
+//     }
+
+//     ~Turn() {
+//         for (int i = 0; i < ROWS; i++) {
+//             delete[] texArr[i];
+//         }
+//         delete[] texArr;
+//     }
+// };
 
 
 int main() {
