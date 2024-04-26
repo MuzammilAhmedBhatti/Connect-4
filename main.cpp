@@ -5,12 +5,6 @@ using namespace std;
 
 int count = 0;
 
-class GameArray {
-public:
-    int number;
-    Texture img;
-};
-
 class GameBoard {
 private:
     const int ROWS = 6;
@@ -135,16 +129,33 @@ public:
     }
 
     void turn(int column_num) {
-        if (row[column_num] == -1)return;
-
+        if (row[column_num] == -1) { count--;return; }
         if (count % 2 == 0) {
-            Tex_arr[row[column_num]][column_num] = yellowTex;
+            int animation = 0;
+            while (animation <= row[column_num]) {
+                ClearBackground(RAYWHITE);
+                Tex_arr[animation][column_num] = yellowTex;
+                if (animation > 0) { Tex_arr[animation - 1][column_num] = getEmptyTexture(); }
+                Draw();
+                EndDrawing();
+                WaitTime(0.03);
+                animation++;
+            }
             grid[row[column_num]][column_num] = 8;
             row[column_num]--;
         }
 
         else if (count % 2 != 0) {
-            Tex_arr[row[column_num]][column_num] = redTex;
+            int animation = 0;
+            while (animation <= row[column_num]) {
+                ClearBackground(RAYWHITE);
+                Tex_arr[animation][column_num] = redTex;
+                if (animation > 0) { Tex_arr[animation - 1][column_num] = getEmptyTexture(); }
+                Draw();
+                EndDrawing();
+                WaitTime(0.03);
+                animation++;
+            }
             grid[row[column_num]][column_num] = 7;
             row[column_num]--;
         }
@@ -221,7 +232,7 @@ int main() {
     cout << "Hello World ! " << endl;
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-    InitWindow(800, 700, "Connect 4");
+    InitWindow(700, 600, "Connect 4");
 
     Texture2D textureLoadPage = LoadTexture("coverPage.png");
     Texture2D textureStartPage = LoadTexture("StartPage.png");
