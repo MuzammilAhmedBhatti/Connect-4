@@ -139,7 +139,7 @@ int main() {
     cout << "Hello World ! " << endl;
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-    InitWindow(800, 450, "Connect 4");
+    InitWindow(700, 600, "Connect 4");
 
     Texture2D textureLoadPage = LoadTexture("conect4.png");
     Texture2D textureStartPage = LoadTexture("StartPage.png");
