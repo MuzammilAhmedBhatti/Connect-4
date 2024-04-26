@@ -1,11 +1,10 @@
+
 #include <iostream>
 #include "raylib.h"
 
 using namespace std;
 
-bool Checking() {
-    return true;
-}
+int count = 0;
 
 class GameArray {
 public:
@@ -17,11 +16,10 @@ class GameBoard {
 private:
     const int ROWS = 6;
     const int COLS = 7;
-    int* row = new int[COLS];
     Texture empty_texture;
-    Texture** Tex_arr;
-
 public:
+    int* row = new int[COLS];
+    Texture** Tex_arr;
     GameBoard() {
         // Load empty texture
         empty_texture = LoadTexture("empty.png");
@@ -80,6 +78,7 @@ public:
         float texture_width = GetScreenWidth() / static_cast<float>(COLS);//Width of each Texture
         float texture_height = GetScreenHeight() / static_cast<float>(ROWS);//Height of each Texture
         float texture_size = min(texture_width, texture_height);
+
         float texture_position_x = (GetScreenWidth() / 2 - ((texture_size / 2) * COLS));
         float texture_position_y = (GetScreenHeight() / 2 - ((texture_size / 2) * ROWS));
 
@@ -91,49 +90,153 @@ public:
                 DrawTexturePro(Tex_arr[i][j], source_rec, dest_rec, Vector2{ 0.0f, 0.0f }, 0.0f, WHITE);
             }
         }
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-            Vector2 mousePos = GetMousePosition();
-            int column_number = static_cast<int>((mousePos.x - texture_position_x) / texture_size);
-            if (mousePos.x < ((GetScreenWidth() / 2 - ((texture_size / 2) * COLS)))) column_number = -1;
-            else if (mousePos.x > ((GetScreenWidth() / 2 + ((texture_size / 2) * COLS))))column_number = -1;
-            cout << "\ncolumn number = " << column_number << endl;
-        }
     }
 };
 
 class twoPlayer : public GameBoard {
+    int** grid;
+    int yellowTex_number = 7;
+    int redTex_number = 8;
+    int column_num = 0;
 public:
     twoPlayer() {
+        grid = new int* [getRows()];
+        for (int i = 0; i < getRows(); i++) {
+            grid[i] = new int[getCols()];
+        }
+        for (int i = 0; i < getRows(); i++) {
+            for (int j = 0; j < getCols(); j++) {
+                grid[i][j] = 0;
+            }
+        }
     }
+
+    void click(Vector2 mousePos) {
+        int column_number = -1;
+
+        float texture_width = GetScreenWidth() / static_cast<float>(getCols());//Width of each Texture
+        float texture_height = GetScreenHeight() / static_cast<float>(getRows());//Height of each Texture
+        float texture_size = min(texture_width, texture_height);
+
+        float texture_position_x = (GetScreenWidth() / 2 - ((texture_size / 2) * getCols()));
+
+        column_number = static_cast<int>((mousePos.x - texture_position_x) / texture_size);
+
+        if (mousePos.x < ((GetScreenWidth() / 2 - ((texture_size / 2) * getCols())))) column_number = -1;
+        else if (mousePos.x > ((GetScreenWidth() / 2 + ((texture_size / 2) * getCols()))))column_number = -1;
+
+        if (column_number >= 0 && column_number < getCols()) {
+            count++;
+            cout << "count = " << count;
+        }
+        cout << "\ncolumn number = " << column_number << endl;
+
+        column_num = column_number;
+        turn(column_num);
+    }
+
+    void turn(int column_num) {
+        if (row[column_num] == -1)return;
+
+        if (count % 2 == 0) {
+            Tex_arr[row[column_num]][column_num] = yellowTex;
+            grid[row[column_num]][column_num] = 8;
+            row[column_num]--;
+            //DrawText("Player 1 Turn", 0, int(GetScreenHeight() / 4), GetScreenWidth() / 38, { 200, 0, 0, 255 });
+        }
+
+        else if (count % 2 != 0) {
+            Tex_arr[row[column_num]][column_num] = redTex;
+            grid[row[column_num]][column_num] = 7;
+            row[column_num]--;
+            //DrawText("Player 2 Turn", 0, int(GetScreenHeight() / 4), GetScreenWidth() / 38, { 200, 0, 0, 255 });
+
+        }
+
+        if (win_check(grid) == 1) {
+            cout << "Player 1 wins";
+            float elapsedTime = 0.0f;
+            const float duration = 3.0f;
+            while (!WindowShouldClose()) {
+                //DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), RED);
+                //EndDrawing();
+                elapsedTime += GetFrameTime();
+                if (elapsedTime >= duration) {
+                    CloseWindow();
+                    InitWindow(800, 450, "Connect 4");
+                    while (!WindowShouldClose()) {
+                        DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), RED);
+                        EndDrawing();
+                    }
+                }
+            }
+        }
+
+
+        else if (win_check(grid) == 2) {
+            cout << "Player 2 wins";
+        }
+    }
+
+    int win_check(int** grid) {
+        int mark;
+        if (count % 2 == 0) mark = 8;
+        else mark = 7;
+
+        bool win = false;
+
+        //Rows
+        for (int i = 0; i < getRows(); i++) {
+            for (int j = 0; j < getCols() - 3; j++) {
+                if (grid[i][j] == mark && grid[i][j + 1] == mark && grid[i][j + 2] == mark && grid[i][j + 3] == mark) {
+                    win = true;
+                    //After Drawing Text
+                    //exit(0);
+                }
+            }
+        }
+
+        //Columns
+        for (int i = 0; i < getRows() - 3; i++) {
+            for (int j = 0; j < getCols(); j++) {
+                if (grid[i][j] == mark && grid[i + 1][j] == mark && grid[i + 2][j] == mark && grid[i + 3][j] == mark) {
+                    win = true;
+                }
+            }
+        }
+
+        //Diagonals
+        for (int i = 0; i < getRows() - 3; i++) {
+            for (int j = 0; j < getCols() - 3; j++) {
+                if (grid[i][j] == mark && grid[i + 1][j + 1] == mark && grid[i + 2][j + 2] == mark && grid[i + 3][j + 3] == mark) {
+                    win = true;
+                }
+            }
+        }
+
+        for (int i = 3; i < getRows(); i++) {
+            for (int j = 0; j < getCols() - 3; j++) {
+                if (grid[i][j] == mark && grid[i - 1][j + 1] == mark && grid[i - 2][j + 2] == mark && grid[i - 3][j + 3] == mark) {
+                    win = true;
+                }
+            }
+        }
+
+        if (win) {
+            if (count % 2 == 0) return 1;
+            else return 2;
+        }
+        return -5;
+    }
+
+    ~twoPlayer() {
+        for (int i = 0; i < getRows(); i++) {
+            delete[]grid[i];
+        }
+        delete[]grid;
+    }
+
 };
-// //Inheritance
-// class Turn : public GameBoard {
-//     //Turn Logic goes here
-//     Texture** texArr = getTexture2DArray();
-//     int ROWS = getRows();
-//     int COLS = getCols();
-//     Texture emptyTexture = getEmptyTexture();
-
-//     Turn() {
-
-//         Texture yellowTex = LoadTexture("yellow.png");
-//         Texture redTex = LoadTexture("red.png");
-
-//         texArr = new Texture * [ROWS];
-//         for (int i = 0; i < ROWS; i++) {
-//             texArr[i] = new Texture[COLS];
-//         }
-
-//     }
-
-//     ~Turn() {
-//         for (int i = 0; i < ROWS; i++) {
-//             delete[] texArr[i];
-//         }
-//         delete[] texArr;
-//     }
-// };
-
 
 int main() {
 
@@ -199,6 +302,7 @@ int main() {
             count_ignore_unload_texture++;
             DrawTexturePro(textureStartPage, { 0,0,static_cast<float>(textureStartPage.width),static_cast<float>(textureStartPage.height) }, // Source
                 destination_Start, { 0,0 }, 0, WHITE); // Here to draw i.e. destination
+
             //Single Player
             DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 8, GetScreenWidth() / 5, GetScreenHeight() / 10, darkBrightRed);
             DrawText("Single Player", (GetScreenWidth() / 2) - (GetScreenWidth() / 11) + 10, GetScreenHeight() / 8 + 10, GetScreenWidth() / 38, WHITE);
@@ -217,6 +321,7 @@ int main() {
             DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 4, GetScreenWidth() / 5, GetScreenHeight() / 10, darkBrightRed);
             DrawText("Two Player", (GetScreenWidth() / 2) - (GetScreenWidth() / 11) + 10, GetScreenHeight() / 4 + 10, GetScreenWidth() / 38, WHITE);
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+                int clicked = 0;
                 float mouseX = GetMouseX();
                 float mouseY = GetMouseY();
                 Rectangle rect = { (float)(GetScreenWidth() / 2) - (GetScreenWidth() / 11), (float)GetScreenHeight() / 4, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
@@ -229,14 +334,16 @@ int main() {
 
                     while (!WindowShouldClose()) {
                         BeginDrawing();
-                        ClearBackground(RAYWHITE);
+                        ClearBackground(BLUE);
 
                         twoPlayerGame.Draw();
-
+                        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && clicked) {
+                            Vector2 mousePos = GetMousePosition();
+                            twoPlayerGame.click(mousePos);
+                        }
+                        clicked++;
                         EndDrawing();
-                        //hello
                     }
-
                 }
             }
 
@@ -269,10 +376,9 @@ int main() {
             }
         }
 
-
         ClearBackground(RAYWHITE);
-
         EndDrawing();
+
     }
 
     CloseWindow();
