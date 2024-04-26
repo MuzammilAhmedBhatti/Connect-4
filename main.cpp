@@ -99,122 +99,39 @@ class twoPlayer : public GameBoard {
     int column_num = 0;
 public:
     twoPlayer() {
-        grid = new int* [getRows()];
-        for (int i = 0; i < getRows(); i++) {
-            grid[i] = new int[getCols()];
-        }
-        for (int i = 0; i < getRows(); i++) {
-            for (int j = 0; j < getCols(); j++) {
-                grid[i][j] = 0;
-            }
-        }
+
+
+
     }
-
-    void click(Vector2 mousePos) {
-        int column_number = -1;
-
-        float texture_width = GetScreenWidth() / static_cast<float>(getCols());//Width of each Texture
-        float texture_height = GetScreenHeight() / static_cast<float>(getRows());//Height of each Texture
-        float texture_size = min(texture_width, texture_height);
-
-        float texture_position_x = (GetScreenWidth() / 2 - ((texture_size / 2) * getCols()));
-
-        column_number = static_cast<int>((mousePos.x - texture_position_x) / texture_size);
-
-        if (mousePos.x < ((GetScreenWidth() / 2 - ((texture_size / 2) * getCols())))) column_number = -1;
-        else if (mousePos.x > ((GetScreenWidth() / 2 + ((texture_size / 2) * getCols()))))column_number = -1;
-
-        if (column_number >= 0 && column_number < getCols()) {
-            count++;
-            cout << "count = " << count;
-        }
-        cout << "\ncolumn number = " << column_number << endl;
-
-        column_num = column_number;
-        turn(column_num);
-    }
-
-    void turn(int column_num) {
-        if (row[column_num] == -1)return;
-
-        if (count % 2 == 0) {
-            Tex_arr[row[column_num]][column_num] = yellowTex;
-            grid[row[column_num]][column_num] = 8;
-            row[column_num]--;
-        }
-
-        else if (count % 2 != 0) {
-            Tex_arr[row[column_num]][column_num] = redTex;
-            grid[row[column_num]][column_num] = 7;
-            row[column_num]--;
-        }
-
-        if (win_check(grid) == 1) {
-            cout << "Player 1 wins";
-        }
-
-        else if (win_check(grid) == 2) {
-            cout << "Player 2 wins";
-        }
-    }
-
-    int win_check(int** grid) {
-        int mark;
-        if (count % 2 == 0) mark = 8;
-        else mark = 7;
-
-        bool win = false;
-
-        //Rows
-        for (int i = 0; i < getRows(); i++) {
-            for (int j = 0; j < getCols() - 3; j++) {
-                if (grid[i][j] == mark && grid[i][j + 1] == mark && grid[i][j + 2] == mark && grid[i][j + 3] == mark) {
-                    win = true;
-                }
-            }
-        }
-
-        //Columns
-        for (int i = 0; i < getRows() - 3; i++) {
-            for (int j = 0; j < getCols(); j++) {
-                if (grid[i][j] == mark && grid[i + 1][j] == mark && grid[i + 2][j] == mark && grid[i + 3][j] == mark) {
-                    win = true;
-                }
-            }
-        }
-
-        //Diagonals
-        for (int i = 0; i < getRows() - 3; i++) {
-            for (int j = 0; j < getCols() - 3; j++) {
-                if (grid[i][j] == mark && grid[i + 1][j + 1] == mark && grid[i + 2][j + 2] == mark && grid[i + 3][j + 3] == mark) {
-                    win = true;
-                }
-            }
-        }
-
-        for (int i = 3; i < getRows(); i++) {
-            for (int j = 0; j < getCols() - 3; j++) {
-                if (grid[i][j] == mark && grid[i - 1][j + 1] == mark && grid[i - 2][j + 2] == mark && grid[i - 3][j + 3] == mark) {
-                    win = true;
-                }
-            }
-        }
-
-        if (win) {
-            if (count % 2 == 0) return 1;
-            else return 2;
-        }
-        return -5;
-    }
-
-    ~twoPlayer() {
-        for (int i = 0; i < getRows(); i++) {
-            delete[]grid[i];
-        }
-        delete[]grid;
-    }
-
 };
+// //Inheritance
+// class Turn : public GameBoard {
+//     //Turn Logic goes here
+//     Texture** texArr = getTexture2DArray();
+//     int ROWS = getRows();
+//     int COLS = getCols();
+//     Texture emptyTexture = getEmptyTexture();
+
+//     Turn() {
+
+//         Texture yellowTex = LoadTexture("yellow.png");
+//         Texture redTex = LoadTexture("red.png");
+
+//         texArr = new Texture * [ROWS];
+//         for (int i = 0; i < ROWS; i++) {
+//             texArr[i] = new Texture[COLS];
+//         }
+
+//     }
+
+//     ~Turn() {
+//         for (int i = 0; i < ROWS; i++) {
+//             delete[] texArr[i];
+//         }
+//         delete[] texArr;
+//     }
+// };
+
 
 int main() {
 
@@ -312,7 +229,7 @@ int main() {
 
                     while (!WindowShouldClose()) {
                         BeginDrawing();
-                        ClearBackground(RAYWHITE);
+                        ClearBackground(BLUE);
 
                         twoPlayerGame.Draw();
                         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && clicked) {
