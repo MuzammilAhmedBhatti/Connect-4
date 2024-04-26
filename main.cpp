@@ -221,9 +221,9 @@ int main() {
     cout << "Hello World ! " << endl;
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-    InitWindow(700, 600, "Connect 4");
+    InitWindow(800, 700, "Connect 4");
 
-    Texture2D textureLoadPage = LoadTexture("conect4.png");
+    Texture2D textureLoadPage = LoadTexture("coverPage.png");
     Texture2D textureStartPage = LoadTexture("StartPage.png");
 
     //For 3 seconds delay first
