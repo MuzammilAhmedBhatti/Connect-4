@@ -118,10 +118,7 @@ public:
         if (mousePos.x < ((GetScreenWidth() / 2 - ((texture_size / 2) * getCols())))) column_number = -1;
         else if (mousePos.x > ((GetScreenWidth() / 2 + ((texture_size / 2) * getCols()))))column_number = -1;
 
-        if (column_number >= 0 && column_number < getCols()) {
-            count++;
-            cout << "count = " << count;
-        }
+
         cout << "\ncolumn number = " << column_number << endl;
 
         column_num = column_number;
@@ -129,7 +126,13 @@ public:
     }
 
     void turn(int column_num) {
-        if (row[column_num] == -1) { count--;return; }
+        if (row[column_num] == -1) { return; }
+
+        if (column_num >= 0 && column_num < getCols()) {
+            count++;
+            cout << "count = " << count;
+        }
+
         if (count % 2 == 0) {
             int animation = 0;
             while (animation <= row[column_num]) {
