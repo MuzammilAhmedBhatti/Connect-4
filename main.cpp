@@ -1,9 +1,222 @@
 #include <iostream>
+#include <limits.h>
 #include "raylib.h"
 
 using namespace std;
 
 int count = 0;
+int MAX_DEPTH = 5;
+int difficulty = 5;
+void makeMove(int**& b, int c, int p, int rows, int cols) {
+    for (int r = rows - 1; r >= 0; r--) {
+        if (b[r][c] == 0) {
+            b[r][c] = p;
+            break;
+        }
+    }
+}
+int** copyBoard(int** grid, int rows, int cols) {
+    int** copied_board = new int* [rows];
+    for (int i = 0; i < rows; i++) {
+        copied_board[i] = new int[cols];
+        for (int j = 0; j < cols; j++) {
+            copied_board[i][j] = grid[i][j];
+        }
+    }
+    return copied_board;
+}
+bool winningMove(int**& grid, int p, int rows, int cols) {
+    int winSequence = 0; // to count adjacent pieces
+    // for horizontal checks
+    for (int c = 0; c < cols - 3; c++) { // for each column
+        for (int r = 0; r < rows; r++) { // each row
+            for (int i = 0; i < 4; i++) { // recall you need 4 to win
+                if (grid[r][c + i] == p) { // if not all pieces match
+                    winSequence++; // add sequence count
+                }
+                if (winSequence == 4) { return true; } // if 4 in row
+            }
+            winSequence = 0; // reset counter
+        }
+    }
+    // vertical checks
+    for (int c = 0; c < cols; c++) {
+        for (int r = rows - 1; r >= 3; r--) {
+            for (int i = 0; i < 4; i++) {
+                if (grid[r - i][c] == p) {
+                    winSequence++;
+                }
+                if (winSequence == 4) { return true; }
+            }
+            winSequence = 0;
+        }
+    }
+    // the below two are diagonal checks
+    for (int c = 0; c < cols - 3; c++) {
+        for (int r = rows - 1; r >= 3; r--) {
+            for (int i = 0; i < 4; i++) {
+                if (grid[r - i][c + i] == p) {
+                    winSequence++;
+                }
+                if (winSequence == 4) { return true; }
+            }
+            winSequence = 0;
+        }
+    }
+    for (int c = cols - 1; c >= 3; c--) {
+        for (int r = rows - 1; r >= 3; r--) {
+            for (int i = 0; i < 4; i++) {
+                if (grid[r - i][c - i] == p) {
+                    winSequence++;
+                }
+                if (winSequence == 4) { return true; }
+            }
+            winSequence = 0;
+        }
+    }
+    return false; // otherwise no winning move
+}
+int heurFunction(int g, int b, int z) {
+    int score = 0;
+    if (g == 4) { score += 500001; } // preference to go for winning move vs. block
+    else if (g == 3 && z == 1) { score += 5000; }
+    else if (g == 2 && z == 2) { score += 500; }
+    else if (b == 2 && z == 2) { score -= 501; } // preference to block
+    else if (b == 3 && z == 1) { score -= 5001; } // preference to block
+    else if (b == 4) { score -= 500000; }
+    return score;
+}
+int scoreSet(int* set, int p) {
+    int good = 0; // points in favor of p
+    int bad = 0; // points against p
+    int empty = 0; // neutral spots
+    for (int i = 0; i < 4; i++) { // just enumerate how many of each
+        good += (set[i] == p) ? 1 : 0;
+        bad += (set[i] == 1 || set[i] == 2) ? 1 : 0;
+        empty += (set[i] == 0) ? 1 : 0;
+    }
+    // bad was calculated as (bad + good), so remove good
+    bad -= good;
+    return heurFunction(good, bad, empty);
+}
+int tabScore(int** grid, int p, int rows, int cols) {
+    int rs[rows], cs[cols], set[4], score = 0;
+
+    //Horizontal
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
+            rs[c] = grid[r][c]; // this is a distinct row alone
+        }
+        for (int c = 0; c < cols - 3; c++) {
+            for (int i = 0; i < 4; i++) {
+                set[i] = rs[c + i]; // for each possible "set" of 4 spots from that row
+            }
+            score += scoreSet(set, p); // find score
+        }
+    }
+    // vertical
+    for (int c = 0; c < cols; c++) {
+        for (int r = 0; r < rows; r++) {
+            cs[r] = grid[r][c];
+        }
+        for (int r = rows - 1; r >= 3; r--) {
+            for (int i = 0; i < 4; i++) {
+                set[i] = cs[r - i];
+            }
+            score += scoreSet(set, p);
+        }
+    }
+    // diagonals
+    for (int r = rows - 1; r >= 3; r--) {
+        for (int c = 0; c < cols; c++) {
+            rs[c] = grid[r][c];
+        }
+        for (int c = 0; c < cols - 3; c++) {
+            for (int i = 0; i < 4; i++) {
+                set[i] = grid[r - i][c + i];
+            }
+            score += scoreSet(set, p);
+        }
+    }
+    for (int r = rows - 1; r >= 3; r--) {
+        for (int c = 0; c < cols; c++) {
+            rs[c] = grid[r][c];
+        }
+        for (int c = cols - 1; c >= 3; c--) {
+            for (int i = 0; i < 4; i++) {
+                set[i] = grid[r - i][c - i];
+            }
+            score += scoreSet(set, p);
+        }
+    }
+    // cout << endl << endl;
+    // for (int i = 0; i < rows; i++) {
+    //     for (int j = 0; j < cols; j++) {
+    //         cout << grid[i][j];
+    //     }
+    //     cout << endl;
+    // }
+    // cout << score << endl << endl;
+    return score;
+}
+int* miniMax(int**& grid, int d, int alf, int bet, int p, int rows, int cols) {
+    int* result = new int[2];
+    if (d == 0 || d >= (rows * cols) - count) {
+        result[0] = tabScore(grid, 2, rows, cols);
+        result[1] = -1;
+        return result;
+    }
+
+    if (p == 2) {
+        int* movesSoFar = new int[2];
+        movesSoFar[0] = INT_MIN;
+        movesSoFar[1] = -1;
+        if (winningMove(grid, 1, rows, cols)) {
+            return movesSoFar;
+        }
+        for (int c = 0; c < cols; c++) { // for each possible move
+            if (grid[0][c] == 0) { // but only if that column is non-full
+                int** newBoard = copyBoard(grid, rows, cols); // make a copy of the board
+                makeMove(newBoard, c, p, rows, cols); // try the move
+                int score = miniMax(newBoard, d - 1, alf, bet, 1, rows, cols)[0]; // find move based on that new board state
+                if (score > movesSoFar[0]) { // if better score, replace it, and consider that best move (for now)
+                    movesSoFar[0] = score;
+                    movesSoFar[1] = c;
+                }
+                alf = max(alf, movesSoFar[0]);
+                if (alf >= bet) { break; } // for pruning
+            }
+        }
+        return movesSoFar;
+    }
+    else {
+        int* movesSoFar = new int[2];
+        movesSoFar[0] = INT_MAX;
+        movesSoFar[1] = -1;
+        if (winningMove(grid, 2, rows, cols)) {
+            return movesSoFar;
+        }
+        for (int c = 0; c < cols; c++) { // for each possible move
+            if (grid[0][c] == 0) { // but only if that column is non-full
+                int** newBoard = copyBoard(grid, rows, cols); // make a copy of the board
+                makeMove(newBoard, c, p, rows, cols); // try the move
+                int score = miniMax(newBoard, d - 1, alf, bet, 2, rows, cols)[0]; // find move based on that new board state
+                if (score < movesSoFar[0]) { // if better score, replace it, and consider that best move (for now)
+                    movesSoFar[0] = score;
+                    movesSoFar[1] = c;
+                }
+                bet = min(bet, movesSoFar[0]);
+                if (alf >= bet) { break; } // for pruning
+            }
+        }
+        return movesSoFar;
+    }
+}
+int aiMove(int**& grid, int& d, int rows, int cols, int player) {
+    cout << "ai move chal raha" << endl;
+    return miniMax(grid, d, 0 - INT_MAX, INT_MAX, player, rows, cols)[1];
+}
+
 
 class GameBoard {
 private:
@@ -88,8 +301,8 @@ public:
 
 class twoPlayer : public GameBoard {
     int** grid;
-    int yellowTex_number = 7;
-    int redTex_number = 8;
+    int yellowTex_number = 2;
+    int redTex_number = 1;
     int column_num = 0;
 public:
     twoPlayer() {
@@ -103,8 +316,22 @@ public:
             }
         }
     }
+    bool AI = false;
+    twoPlayer(bool AI) {
+        grid = new int* [getRows()];
+        for (int i = 0; i < getRows(); i++) {
+            grid[i] = new int[getCols()];
+        }
+        for (int i = 0; i < getRows(); i++) {
+            for (int j = 0; j < getCols(); j++) {
+                grid[i][j] = 0;
+            }
+        }
+        this->AI = AI;
+    }
 
     void click(Vector2 mousePos) {
+        cout << "click func\n";
         int column_number = -1;
 
         float texture_width = GetScreenWidth() / static_cast<float>(getCols());//Width of each Texture
@@ -127,29 +354,43 @@ public:
 
     void turn(int column_num) {
         if (row[column_num] == -1) { return; }
-
         if (column_num >= 0 && column_num < getCols()) {
             count++;
             cout << "count = " << count;
         }
 
-        if (count % 2 == 0) {
+        if (count % 2 != 0) {
             int animation = 0;
+            cout << "\nif mein aa gaya" << endl;
             while (animation <= row[column_num]) {
                 ClearBackground(RAYWHITE);
                 Tex_arr[animation][column_num] = yellowTex;
                 if (animation > 0) { Tex_arr[animation - 1][column_num] = getEmptyTexture(); }
                 Draw();
                 EndDrawing();
-                WaitTime(0.03);
+                WaitTime(0.05);
                 animation++;
             }
-            grid[row[column_num]][column_num] = 8;
+            grid[row[column_num]][column_num] = 1;
             row[column_num]--;
+            cout << "Idher pohanchaa count =" << count << endl;//but not reaching here on my click
         }
 
-        else if (count % 2 != 0) {
+        else if (count % 2 == 0) {
             int animation = 0;
+            cout << "\nElse if mein aa gaya" << endl;
+            if (AI) {
+                int rows = getRows(), cols = getCols();
+                cout << "\nCall to aiMove" << endl;
+                for (int i = 0; i < rows; i++) {
+                    for (int j = 0; j < cols; j++) {
+                        cout << grid[i][j];
+                    }
+                    cout << endl;
+                }
+                column_num = aiMove(grid, difficulty, rows, cols, 2);
+                cout << "\nColumn number from AI " << column_num << endl;
+            }
             while (animation <= row[column_num]) {
                 ClearBackground(RAYWHITE);
                 Tex_arr[animation][column_num] = redTex;
@@ -159,7 +400,7 @@ public:
                 WaitTime(0.03);
                 animation++;
             }
-            grid[row[column_num]][column_num] = 7;
+            grid[row[column_num]][column_num] = 2;
             row[column_num]--;
         }
 
@@ -170,12 +411,13 @@ public:
         else if (win_check(grid) == 2) {
             cout << "Player 2 wins";
         }
+        cout << "Turn ka end" << endl;
     }
 
     int win_check(int** grid) {
         int mark;
-        if (count % 2 == 0) mark = 8;
-        else mark = 7;
+        if (count % 2 == 0) mark = 2;
+        else mark = 1;
 
         bool win = false;
 
@@ -215,8 +457,8 @@ public:
         }
 
         if (win) {
-            if (count % 2 == 0) return 1;
-            else return 2;
+            if (count % 2 == 0) return 2;
+            else return 1;
         }
         return -5;
     }
@@ -231,7 +473,6 @@ public:
 };
 
 int main() {
-
     cout << "Hello World ! " << endl;
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
@@ -299,12 +540,28 @@ int main() {
             DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 8, GetScreenWidth() / 5, GetScreenHeight() / 10, darkBrightRed);
             DrawText("Single Player", (GetScreenWidth() / 2) - (GetScreenWidth() / 11) + 10, GetScreenHeight() / 8 + 10, GetScreenWidth() / 38, WHITE);
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+                int clicked = 0;
                 float mouseX = GetMouseX();
                 float mouseY = GetMouseY();
                 Rectangle rect = { (float)(GetScreenWidth() / 2) - (GetScreenWidth() / 11), (float)GetScreenHeight() / 8, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
 
                 if (CheckCollisionPointRec({ mouseX, mouseY }, rect)) {
-                    cout << "Ayein!" << endl;
+
+                    cout << "Artificial Intelligence" << endl;
+
+                    twoPlayer twoPlayerGame(true);
+                    while (!WindowShouldClose()) {
+                        BeginDrawing();
+                        ClearBackground(RAYWHITE);
+
+                        twoPlayerGame.Draw();
+                        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && clicked) {
+                            Vector2 mousePos = GetMousePosition();
+                            twoPlayerGame.click(mousePos);
+                        }
+                        clicked++;
+                        EndDrawing();
+                    }
                 }
             }
 
