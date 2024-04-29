@@ -1,8 +1,14 @@
 #include <iostream>
+#include <vector>
+#include <climits>
+
 #include "raylib.h"
 
 using namespace std;
 
+const int EMPTY = 0;
+const int AI = 1;
+const int HUMAN = -1;
 int count = 0;
 
 class GameBoard {
@@ -51,7 +57,7 @@ public:
             delete[] Tex_arr[i];
         }
         delete[] Tex_arr;
-        delete[]row;
+        delete[] row;
     }
 
     // Function to initialize game board with empty textures
@@ -87,22 +93,19 @@ public:
 };
 
 class twoPlayer : public GameBoard {
-    int** grid;
-    int yellowTex_number = 7;
-    int redTex_number = 8;
+private:
+    vector<vector<int>> grid;
     int column_num = 0;
 public:
-    twoPlayer() {
-        grid = new int* [getRows()];
-        for (int i = 0; i < getRows(); i++) {
-            grid[i] = new int[getCols()];
-        }
-        for (int i = 0; i < getRows(); i++) {
-            for (int j = 0; j < getCols(); j++) {
-                grid[i][j] = 0;
-            }
-        }
+    twoPlayer() : GameBoard() {
+        // Initialize grid with zeros
+        grid = vector<vector<int>>(getRows(), vector<int>(getCols(), 0));
     }
+
+    int evaluate(const std::vector<std::vector<int>>& board);
+    int minimax(std::vector<std::vector<int>> board, int depth, bool maximizingPlayer, int alpha, int beta);
+    int findBestMove(const std::vector<std::vector<int>>& board);
+    bool isFull(const std::vector<std::vector<int>>& board);
 
     void click(Vector2 mousePos) {
         int column_number = -1;
@@ -118,7 +121,6 @@ public:
         if (mousePos.x < ((GetScreenWidth() / 2 - ((texture_size / 2) * getCols())))) column_number = -1;
         else if (mousePos.x > ((GetScreenWidth() / 2 + ((texture_size / 2) * getCols()))))column_number = -1;
 
-
         cout << "\ncolumn number = " << column_number << endl;
 
         column_num = column_number;
@@ -128,8 +130,9 @@ public:
     void turn(int column_num) {
         if (row[column_num] == -1) { return; }
 
+        if (count != -1) count++;
+
         if (column_num >= 0 && column_num < getCols()) {
-            count++;
             cout << "count = " << count;
         }
 
@@ -229,6 +232,124 @@ public:
     }
 
 };
+
+int twoPlayer::evaluate(const std::vector<std::vector<int>>& board) {
+    int score = 0;
+
+    // Check rows
+    for (int i = 0; i < GameBoard::getRows(); ++i) {
+        for (int j = 0; j <= GameBoard::getCols() - 4; ++j) {
+            int sum = 0;
+            for (int k = 0; k < 4; ++k) {
+                sum += board[i][j + k];
+            }
+            if (sum == 4) return INT_MAX; // AI wins
+            else if (sum == -4) return INT_MIN; // Human wins
+            score += sum;
+        }
+    }
+
+    // Check columns
+    for (int j = 0; j < GameBoard::getCols(); ++j) {
+        for (int i = 0; i <= GameBoard::getRows() - 4; ++i) {
+            int sum = 0;
+            for (int k = 0; k < 4; ++k) {
+                sum += board[i + k][j];
+            }
+            if (sum == 4) return INT_MAX; // AI wins
+            else if (sum == -4) return INT_MIN; // Human wins
+            score += sum;
+        }
+    }
+
+    // Check diagonal (top-left to bottom-right)
+    for (int i = 0; i <= GameBoard::getRows() - 4; ++i) {
+        for (int j = 0; j <= GameBoard::getCols() - 4; ++j) {
+            int sum = 0;
+            for (int k = 0; k < 4; ++k) {
+                sum += board[i + k][j + k];
+            }
+            if (sum == 4) return INT_MAX; // AI wins
+            else if (sum == -4) return INT_MIN; // Human wins
+            score += sum;
+        }
+    }
+
+    // Check diagonal (bottom-left to top-right)
+    for (int i = GameBoard::getRows() - 1; i >= 3; --i) {
+        for (int j = 0; j <= GameBoard::getCols() - 4; ++j) {
+            int sum = 0;
+            for (int k = 0; k < 4; ++k) {
+                sum += board[i - k][j + k];
+            }
+            if (sum == 4) return INT_MAX; // AI wins
+            else if (sum == -4) return INT_MIN; // Human wins
+            score += sum;
+        }
+    }
+
+    return score;
+}
+
+bool twoPlayer::isFull(int** board) {
+    // Check if the board is full
+    for (int i = 0; i < GameBoard::getRows(); ++i) {
+        for (int j = 0; j < GameBoard::getCols(); ++j) {
+            if (board[i][j] == EMPTY) return false;
+        }
+    }
+    return true;
+}
+
+int twoPlayer::minimax(std::vector<std::vector<int>> board, int depth, bool maximizingPlayer, int alpha, int beta) {
+    if (depth == 0 || isFull(board)) {
+        return evaluate(board);
+    }
+
+    if (maximizingPlayer) {
+        int maxEval = INT_MIN;
+        for (int col = 0; col < GameBoard::getCols(); ++col) {
+            if (board[0][col] == EMPTY) {
+                for (int row = GameBoard::getRows() - 1; row >= 0; --row) {
+                    if (board[row][col] == EMPTY) {
+                        board[row][col] = AI;
+                        int eval = minimax(board, depth - 1, false, alpha, beta);
+                        board[row][col] = EMPTY;
+                        maxEval = std::max(maxEval, eval);
+                        alpha = std::max(alpha, eval);
+                        if (beta <= alpha)
+                            break; // Beta cut-off
+                    }
+                }
+            }
+        }
+        return maxEval;
+    }
+    else {
+        int minEval = INT_MAX;
+        for (int col = 0; col < GameBoard::getCols(); ++col) {
+            if (board[0][col] == EMPTY) {
+                for (int row = GameBoard::getRows() - 1; row >= 0; --row) {
+                    if (board[row][col] == EMPTY) {
+                        board[row][col] = HUMAN;
+                        int eval = minimax(board, depth - 1, true, alpha, beta);
+                        board[row][col] = EMPTY;
+                        minEval = std::min(minEval, eval);
+                        beta = std::min(beta, eval);
+                        if (beta <= alpha)
+                            break; // Alpha cut-off
+                    }
+                }
+            }
+        }
+        return minEval;
+    }
+}
+
+int twoPlayer::findBestMove(const std::vector<std::vector<int>>& board) {
+    // Implementation of the findBestMove function
+    // Same as the findBestMove function provided in the AI code
+}
 
 int main() {
 
@@ -376,4 +497,3 @@ int main() {
     CloseWindow();
 
     return 0;
-}
