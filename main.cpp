@@ -1,6 +1,7 @@
 #include <iostream>
 #include <limits.h>
 #include "raylib.h"
+#include<cstdlib>
 
 using namespace std;
 
@@ -149,14 +150,6 @@ int tabScore(int** grid, int p, int rows, int cols) {
             score += scoreSet(set, p);
         }
     }
-    // cout << endl << endl;
-    // for (int i = 0; i < rows; i++) {
-    //     for (int j = 0; j < cols; j++) {
-    //         cout << grid[i][j];
-    //     }
-    //     cout << endl;
-    // }
-    // cout << score << endl << endl;
     return score;
 }
 int* miniMax(int**& grid, int d, int alf, int bet, int p, int rows, int cols) {
@@ -213,7 +206,7 @@ int* miniMax(int**& grid, int d, int alf, int bet, int p, int rows, int cols) {
     }
 }
 int aiMove(int**& grid, int& d, int rows, int cols, int player) {
-    cout << "ai move chal raha" << endl;
+    //cout << "ai move chal raha" << endl;
     return miniMax(grid, d, 0 - INT_MAX, INT_MAX, player, rows, cols)[1];
 }
 
@@ -253,7 +246,9 @@ public:
     Texture getEmptyTexture() {
         return empty_texture;
     }
-
+    Texture getRedMagnified() {
+        return redTex_magnified;
+    }
     Texture** getTexture2DArray() {
         return Tex_arr;
     }
@@ -278,6 +273,8 @@ public:
 
     Texture yellowTex = LoadTexture("yellow.png");
     Texture redTex = LoadTexture("red.png");
+    Texture redTex_magnified = LoadTexture("red_magnified.png");
+    Texture yellowTex_magnified = LoadTexture("yellow_magnified.png");
 
     // Function to draw the game board
     void Draw() {
@@ -331,7 +328,7 @@ public:
     }
 
     void click(Vector2 mousePos) {
-        cout << "click func\n";
+        //cout << "click func\n";
         int column_number = -1;
 
         float texture_width = GetScreenWidth() / static_cast<float>(getCols());//Width of each Texture
@@ -345,9 +342,6 @@ public:
         if (mousePos.x < ((GetScreenWidth() / 2 - ((texture_size / 2) * getCols())))) column_number = -1;
         else if (mousePos.x > ((GetScreenWidth() / 2 + ((texture_size / 2) * getCols()))))column_number = -1;
 
-
-        cout << "\ncolumn number = " << column_number << endl;
-
         column_num = column_number;
         turn(column_num);
     }
@@ -356,65 +350,147 @@ public:
         if (row[column_num] == -1) { return; }
         if (column_num >= 0 && column_num < getCols()) {
             count++;
-            cout << "count = " << count;
+            cout << "count = " << count << endl;
         }
 
         if (count % 2 != 0) {
+            cout << "if mein aa gaya\n";
             int animation = 0;
-            cout << "\nif mein aa gaya" << endl;
             while (animation <= row[column_num]) {
                 ClearBackground(RAYWHITE);
                 Tex_arr[animation][column_num] = yellowTex;
                 if (animation > 0) { Tex_arr[animation - 1][column_num] = getEmptyTexture(); }
+                WaitTime(0.05);
                 Draw();
                 EndDrawing();
-                WaitTime(0.05);
                 animation++;
             }
             grid[row[column_num]][column_num] = 1;
             row[column_num]--;
-            cout << "Idher pohanchaa count =" << count << endl;//but not reaching here on my click
         }
 
         else if (count % 2 == 0) {
             int animation = 0;
-            cout << "\nElse if mein aa gaya" << endl;
-            if (AI) {
-                int rows = getRows(), cols = getCols();
-                cout << "\nCall to aiMove" << endl;
-                for (int i = 0; i < rows; i++) {
-                    for (int j = 0; j < cols; j++) {
-                        cout << grid[i][j];
-                    }
-                    cout << endl;
-                }
-                column_num = aiMove(grid, difficulty, rows, cols, 2);
-                cout << "\nColumn number from AI " << column_num << endl;
-            }
             while (animation <= row[column_num]) {
                 ClearBackground(RAYWHITE);
                 Tex_arr[animation][column_num] = redTex;
                 if (animation > 0) { Tex_arr[animation - 1][column_num] = getEmptyTexture(); }
+                WaitTime(0.05);
                 Draw();
                 EndDrawing();
-                WaitTime(0.03);
                 animation++;
             }
             grid[row[column_num]][column_num] = 2;
             row[column_num]--;
+
+        }
+        if (AI && count % 2 != 0) {
+            int aiCol = aiMove(grid, difficulty, getRows(), getCols(), 2);
+            cout << "Column number from AI " << aiCol << endl;
+            turn(aiCol);
+        }
+        int win_row = 0, win_col = 0;
+        bool right_diagnol = false, left_diagnol = false, vertical = false, horizontal = false;
+        if (win_check(grid, win_row, win_col, right_diagnol, left_diagnol, vertical, horizontal) == 1) {
+            cout << "Player 1 wins\n";
+            WaitTime(0.5);
+            if (horizontal) {
+                cout << "win_col = " << win_col << " win_row = " << win_row << endl;
+                for (int i = win_col;i < win_col + 4; i++) {
+                    WaitTime(0.05);
+                    Tex_arr[win_row][i] = yellowTex_magnified;
+                    Draw();
+                    EndDrawing();
+                }
+            }
+            else if (vertical) {
+                cout << "win_col = " << win_col << " win_row = " << win_row << endl;
+                for (int i = win_row;i < win_row + 4; i++) {
+                    WaitTime(0.05);
+                    Tex_arr[i][win_col] = yellowTex_magnified;
+                    Draw();
+                    EndDrawing();
+                }
+            }
+            else if (right_diagnol) {
+                cout << "win_col = " << win_col << " win_row = " << win_row << endl;
+                for (int i = 0;i < 4; i++) {
+                    WaitTime(0.05);
+                    Tex_arr[win_row + i][win_col + i] = yellowTex_magnified;
+                    Draw();
+                    EndDrawing();
+                }
+            }
+            else if (left_diagnol) {
+                cout << "win_col = " << win_col << " win_row = " << win_row << endl;
+                for (int i = 0;i < 4; i++) {
+                    WaitTime(0.05);
+                    Tex_arr[win_row - i][win_col + i] = yellowTex_magnified;
+                    Draw();
+                    EndDrawing();
+                }
+            }
+            Draw();
+            EndDrawing();
+            WaitTime(2.0);
+            BeginDrawing();
+            ClearBackground(RAYWHITE);
+            EndDrawing();
+            WaitTime(5.0);
+            exit(0);
         }
 
-        if (win_check(grid) == 1) {
-            cout << "Player 1 wins";
+        else if (win_check(grid, win_row, win_col, right_diagnol, left_diagnol, vertical, horizontal) == 2) {
+            cout << "Player 2 wins\n";
+            WaitTime(0.5);
+            if (horizontal) {
+                cout << "win_col = " << win_col << " win_row = " << win_row << endl;
+                for (int i = win_col;i < win_col + 4; i++) {
+                    WaitTime(0.05);
+                    Tex_arr[win_row][i] = redTex_magnified;
+                    Draw();
+                    EndDrawing();
+                }
+            }
+            else if (vertical) {
+                cout << "win_col = " << win_col << " win_row = " << win_row << endl;
+                for (int i = win_row;i < win_row + 4; i++) {
+                    WaitTime(0.05);
+                    Tex_arr[i][win_col] = redTex_magnified;
+                    Draw();
+                    EndDrawing();
+                }
+            }
+            else if (right_diagnol) {
+                cout << "win_col = " << win_col << " win_row = " << win_row << endl;
+                for (int i = 0;i < 4; i++) {
+                    WaitTime(0.05);
+                    Tex_arr[win_row + i][win_col + i] = redTex_magnified;
+                    Draw();
+                    EndDrawing();
+                }
+            }
+            else if (left_diagnol) {
+                cout << "win_col = " << win_col << " win_row = " << win_row << endl;
+                for (int i = 0;i < 4; i++) {
+                    WaitTime(0.05);
+                    Tex_arr[win_row - i][win_col + i] = redTex_magnified;
+                    Draw();
+                    EndDrawing();
+                }
+            }
+            Draw();
+            EndDrawing();
+            WaitTime(2.0);
+            BeginDrawing();
+            ClearBackground(RAYWHITE);
+            EndDrawing();
+            WaitTime(5.0);
+            exit(0);
         }
-
-        else if (win_check(grid) == 2) {
-            cout << "Player 2 wins";
-        }
-        cout << "Turn ka end" << endl;
     }
 
-    int win_check(int** grid) {
+    int win_check(int** grid, int& win_row, int& win_col, bool& right_diagnol, bool& left_diagnol, bool& vertical, bool& horizontal) {
         int mark;
         if (count % 2 == 0) mark = 2;
         else mark = 1;
@@ -426,6 +502,9 @@ public:
             for (int j = 0; j < getCols() - 3; j++) {
                 if (grid[i][j] == mark && grid[i][j + 1] == mark && grid[i][j + 2] == mark && grid[i][j + 3] == mark) {
                     win = true;
+                    win_row = i;
+                    win_col = j;
+                    horizontal = true;
                 }
             }
         }
@@ -435,6 +514,9 @@ public:
             for (int j = 0; j < getCols(); j++) {
                 if (grid[i][j] == mark && grid[i + 1][j] == mark && grid[i + 2][j] == mark && grid[i + 3][j] == mark) {
                     win = true;
+                    win_row = i;
+                    win_col = j;
+                    vertical = true;
                 }
             }
         }
@@ -444,6 +526,9 @@ public:
             for (int j = 0; j < getCols() - 3; j++) {
                 if (grid[i][j] == mark && grid[i + 1][j + 1] == mark && grid[i + 2][j + 2] == mark && grid[i + 3][j + 3] == mark) {
                     win = true;
+                    win_row = i;
+                    win_col = j;
+                    right_diagnol = true;
                 }
             }
         }
@@ -452,6 +537,9 @@ public:
             for (int j = 0; j < getCols() - 3; j++) {
                 if (grid[i][j] == mark && grid[i - 1][j + 1] == mark && grid[i - 2][j + 2] == mark && grid[i - 3][j + 3] == mark) {
                     win = true;
+                    win_row = i;
+                    win_col = j;
+                    left_diagnol = true;
                 }
             }
         }
@@ -461,6 +549,10 @@ public:
             else return 1;
         }
         return -5;
+    }
+
+    int**& getGrid() {
+        return grid;
     }
 
     ~twoPlayer() {
@@ -546,7 +638,7 @@ int main() {
                 Rectangle rect = { (float)(GetScreenWidth() / 2) - (GetScreenWidth() / 11), (float)GetScreenHeight() / 8, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
 
                 if (CheckCollisionPointRec({ mouseX, mouseY }, rect)) {
-
+                    count = 0;
                     cout << "Artificial Intelligence" << endl;
 
                     twoPlayer twoPlayerGame(true);
@@ -555,10 +647,16 @@ int main() {
                         ClearBackground(RAYWHITE);
 
                         twoPlayerGame.Draw();
-                        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && clicked) {
+                        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && clicked && count % 2 == 0) {
                             Vector2 mousePos = GetMousePosition();
                             twoPlayerGame.click(mousePos);
                         }
+                        // else if (count % 2 != 0) {
+                        //     //WaitTime(5.0); idher not okay
+                        //     int aiCol = aiMove(twoPlayerGame.getGrid(), difficulty, twoPlayerGame.getRows(), twoPlayerGame.getCols(), 2);
+                        //     twoPlayerGame.turn(aiCol);
+                        // }
+                        //if (count % 2 == 0)WaitTime(5.0); idher bhi okay
                         clicked++;
                         EndDrawing();
                     }
@@ -576,8 +674,8 @@ int main() {
                 Rectangle rect = { (float)(GetScreenWidth() / 2) - (GetScreenWidth() / 11), (float)GetScreenHeight() / 4, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
 
                 if (CheckCollisionPointRec({ mouseX, mouseY }, rect)) {
-
-                    cout << "DOUBLE TROUBLE" << endl;
+                    count = 0;
+                    cout << "DONO KHELO :)" << endl;
 
                     twoPlayer twoPlayerGame;
 
@@ -624,10 +722,8 @@ int main() {
                 }
             }
         }
-
         ClearBackground(RAYWHITE);
         EndDrawing();
-
     }
 
     CloseWindow();
