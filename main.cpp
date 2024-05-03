@@ -297,11 +297,14 @@ public:
 };
 
 class twoPlayer : public GameBoard {
-    int** grid;
     int yellowTex_number = 2;
     int redTex_number = 1;
     int column_num = 0;
 public:
+    int** grid;
+    int** getGrid() {
+        return grid;
+    }
     twoPlayer() {
         grid = new int* [getRows()];
         for (int i = 0; i < getRows(); i++) {
@@ -354,7 +357,6 @@ public:
         }
 
         if (count % 2 != 0) {
-            cout << "if mein aa gaya\n";
             int animation = 0;
             while (animation <= row[column_num]) {
                 ClearBackground(RAYWHITE);
@@ -367,6 +369,7 @@ public:
             }
             grid[row[column_num]][column_num] = 1;
             row[column_num]--;
+            cout << "Idher pohanchaa count =" << count << endl;//but not reaching here on my click
         }
 
         else if (count % 2 == 0) {
