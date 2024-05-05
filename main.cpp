@@ -7,7 +7,7 @@ using namespace std;
 
 int count = 0;
 int MAX_DEPTH = 5;
-int difficulty = 5;
+int difficulty = 1;
 void makeMove(int**& b, int c, int p, int rows, int cols) {
     for (int r = rows - 1; r >= 0; r--) {
         if (b[r][c] == 0) {
@@ -297,14 +297,11 @@ public:
 };
 
 class twoPlayer : public GameBoard {
+    int** grid;
     int yellowTex_number = 2;
     int redTex_number = 1;
     int column_num = 0;
 public:
-    int** grid;
-    int** getGrid() {
-        return grid;
-    }
     twoPlayer() {
         grid = new int* [getRows()];
         for (int i = 0; i < getRows(); i++) {
@@ -331,7 +328,6 @@ public:
     }
 
     void click(Vector2 mousePos) {
-        //cout << "click func\n";
         int column_number = -1;
 
         float texture_width = GetScreenWidth() / static_cast<float>(getCols());//Width of each Texture
@@ -386,11 +382,6 @@ public:
             grid[row[column_num]][column_num] = 2;
             row[column_num]--;
 
-        }
-        if (AI && count % 2 != 0) {
-            int aiCol = aiMove(grid, difficulty, getRows(), getCols(), 2);
-            cout << "Column number from AI " << aiCol << endl;
-            turn(aiCol);
         }
         int win_row = 0, win_col = 0;
         bool right_diagnol = false, left_diagnol = false, vertical = false, horizontal = false;
@@ -491,6 +482,26 @@ public:
             WaitTime(5.0);
             exit(0);
         }
+
+        if (AI && count % 2 != 0) {
+            int aiCol = aiMove(grid, difficulty, getRows(), getCols(), 2);
+            cout << "Column number from AI " << aiCol << endl;
+            if (aiCol == -1) {
+                for (int i = getRows() - 1;i >= 0; i--) {
+                    bool flag = false;
+                    for (int j = 0; j < getCols(); j++) {
+                        if (grid[i][j] == 0) {
+                            flag = true;
+                            aiCol = j;
+                            break;
+                        }
+                    }
+                    if (flag)break;
+                }
+            }
+            turn(aiCol);
+        }
+
     }
 
     int win_check(int** grid, int& win_row, int& win_col, bool& right_diagnol, bool& left_diagnol, bool& vertical, bool& horizontal) {
@@ -554,10 +565,6 @@ public:
         return -5;
     }
 
-    int**& getGrid() {
-        return grid;
-    }
-
     ~twoPlayer() {
         for (int i = 0; i < getRows(); i++) {
             delete[]grid[i];
@@ -571,7 +578,7 @@ int main() {
     cout << "Hello World ! " << endl;
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-    InitWindow(700, 600, "Connect 4");
+    InitWindow(840, 720, "Connect 4");
 
     Texture2D textureLoadPage = LoadTexture("coverPage.png");
     Texture2D textureStartPage = LoadTexture("StartPage.png");
@@ -651,15 +658,10 @@ int main() {
 
                         twoPlayerGame.Draw();
                         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && clicked && count % 2 == 0) {
+                            cout << "in main count = " << count << endl;
                             Vector2 mousePos = GetMousePosition();
                             twoPlayerGame.click(mousePos);
                         }
-                        // else if (count % 2 != 0) {
-                        //     //WaitTime(5.0); idher not okay
-                        //     int aiCol = aiMove(twoPlayerGame.getGrid(), difficulty, twoPlayerGame.getRows(), twoPlayerGame.getCols(), 2);
-                        //     twoPlayerGame.turn(aiCol);
-                        // }
-                        //if (count % 2 == 0)WaitTime(5.0); idher bhi okay
                         clicked++;
                         EndDrawing();
                     }
