@@ -7,7 +7,7 @@ using namespace std;
 
 int count = 0;
 int MAX_DEPTH = 5;
-int difficulty = 1;
+int difficulty = 5;
 void makeMove(int**& b, int c, int p, int rows, int cols) {
     for (int r = rows - 1; r >= 0; r--) {
         if (b[r][c] == 0) {
@@ -487,17 +487,20 @@ public:
             int aiCol = aiMove(grid, difficulty, getRows(), getCols(), 2);
             cout << "Column number from AI " << aiCol << endl;
             if (aiCol == -1) {
-                for (int i = getRows() - 1;i >= 0; i--) {
-                    bool flag = false;
-                    for (int j = 0; j < getCols(); j++) {
-                        if (grid[i][j] == 0) {
-                            flag = true;
-                            aiCol = j;
-                            break;
-                        }
-                    }
-                    if (flag)break;
-                }
+                difficulty -= 1;
+                aiCol = aiMove(grid, difficulty, getRows(), getCols(), 2);
+                cout << "Column number from AI " << aiCol << endl;
+                // for (int i = getRows() - 1;i >= 0; i--) {
+                //     bool flag = false;
+                //     for (int j = 0; j < getCols(); j++) {
+                //         if (grid[i][j] == 0) {
+                //             flag = true;
+                //             aiCol = j;
+                //             break;
+                //         }
+                //     }
+                //     if (flag)break;
+                // }
             }
             turn(aiCol);
         }
