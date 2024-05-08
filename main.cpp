@@ -2,15 +2,20 @@
 #include <limits.h>
 #include "raylib.h"
 #include<cstdlib>
+#include <crtdbg.h>
 
 using namespace std;
 bool should_win = false;
 int count = 0;
-int difficulty = 5;
+int difficulty = 0;
+
+class GameEnd {};
+
 void select_level(Texture textureStartPage, Rectangle destination_Start, int& clicked) {
     clicked = 0;
     while (!WindowShouldClose()) {
         BeginDrawing();
+        ClearBackground(RAYWHITE);
         Color darkBrightRed = { 200, 0, 0, 255 };
         DrawTexturePro(textureStartPage, { 0,0,static_cast<float>(textureStartPage.width),static_cast<float>(textureStartPage.height) }, // Source
             destination_Start, { 0,0 }, 0, WHITE); // Here to draw i.e. destination
@@ -26,13 +31,18 @@ void select_level(Texture textureStartPage, Rectangle destination_Start, int& cl
         DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 2.7, GetScreenWidth() / 5, GetScreenHeight() / 10, darkBrightRed);
         DrawText("Hard", (GetScreenWidth() / 2) - (GetScreenWidth() / 11) + 10, GetScreenHeight() / 2.7 + 10, GetScreenWidth() / 38, WHITE);
         Rectangle rect_hard = { (float)(GetScreenWidth() / 2) - (GetScreenWidth() / 11), (float)GetScreenHeight() / 2.7f, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-            float mouseX = GetMouseX();
-            float mouseY = GetMouseY();
-            if (CheckCollisionPointRec({ mouseX, mouseY }, rect_easy)) difficulty = 1;
-            else if (CheckCollisionPointRec({ mouseX, mouseY }, rect_medium)) difficulty = 3;
-            else if (CheckCollisionPointRec({ mouseX, mouseY }, rect_hard)) difficulty = 5;
+
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            if (clicked) {
+                float mouseX = GetMouseX();
+                float mouseY = GetMouseY();
+                if (CheckCollisionPointRec({ mouseX, mouseY }, rect_easy)) difficulty = 1;
+                else if (CheckCollisionPointRec({ mouseX, mouseY }, rect_medium)) difficulty = 3;
+                else if (CheckCollisionPointRec({ mouseX, mouseY }, rect_hard)) difficulty = 5;
+            }
         }
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) clicked++;
+        if (difficulty) return;
         EndDrawing();
     }
 }
@@ -181,8 +191,8 @@ int tabScore(int** grid, int p, int rows, int cols) {
     return score;
 }
 int* miniMax(int**& grid, int d, int alf, int bet, int p, int rows, int cols) {
-    int* result = new int[2];
     if (d == 0 || d >= (rows * cols) - count) {
+        int* result = new int[2];
         result[0] = tabScore(grid, 2, rows, cols);
         result[1] = -1;
         return result;
@@ -199,11 +209,16 @@ int* miniMax(int**& grid, int d, int alf, int bet, int p, int rows, int cols) {
             if (grid[0][c] == 0) { // but only if that column is non-full
                 int** newBoard = copyBoard(grid, rows, cols); // make a copy of the board
                 makeMove(newBoard, c, p, rows, cols); // try the move
-                int score = miniMax(newBoard, d - 1, alf, bet, 1, rows, cols)[0]; // find move based on that new board state
-                if (score > movesSoFar[0]) { // if better score, replace it, and consider that best move (for now)
-                    movesSoFar[0] = score;
+                int* score = miniMax(newBoard, d - 1, alf, bet, 1, rows, cols); // find move based on that new board state
+                for (int i = 0; i < rows; i++) {
+                    delete[] newBoard[i];
+                }
+                delete[] newBoard;
+                if (score[0] > movesSoFar[0]) { // if better score, replace it, and consider that best move (for now)
+                    movesSoFar[0] = score[0];
                     movesSoFar[1] = c;
                 }
+                delete[] score;
                 alf = max(alf, movesSoFar[0]);
                 if (alf >= bet) { break; } // for pruning
             }
@@ -221,11 +236,16 @@ int* miniMax(int**& grid, int d, int alf, int bet, int p, int rows, int cols) {
             if (grid[0][c] == 0) { // but only if that column is non-full
                 int** newBoard = copyBoard(grid, rows, cols); // make a copy of the board
                 makeMove(newBoard, c, p, rows, cols); // try the move
-                int score = miniMax(newBoard, d - 1, alf, bet, 2, rows, cols)[0]; // find move based on that new board state
-                if (score < movesSoFar[0]) { // if better score, replace it, and consider that best move (for now)
-                    movesSoFar[0] = score;
+                int* score = miniMax(newBoard, d - 1, alf, bet, 2, rows, cols); // find move based on that new board state
+                for (int i = 0; i < rows; i++) {
+                    delete[] newBoard[i];
+                }
+                delete[] newBoard;
+                if (score[0] < movesSoFar[0]) { // if better score, replace it, and consider that best move (for now)
+                    movesSoFar[0] = score[0];
                     movesSoFar[1] = c;
                 }
+                delete[] score;
                 bet = min(bet, movesSoFar[0]);
                 if (alf >= bet) { break; } // for pruning
             }
@@ -235,7 +255,10 @@ int* miniMax(int**& grid, int d, int alf, int bet, int p, int rows, int cols) {
 }
 int aiMove(int**& grid, int& d, int rows, int cols, int player) {
     //cout << "ai move chal raha" << endl;
-    return miniMax(grid, d, 0 - INT_MAX, INT_MAX, player, rows, cols)[1];
+    int* temp = miniMax(grid, d, 0 - INT_MAX, INT_MAX, player, rows, cols);
+    int temp2 = temp[1];
+    delete[] temp;
+    return temp2;
 }
 
 
@@ -281,6 +304,29 @@ public:
         return Tex_arr;
     }
 
+
+    float GetGridCenterX(int col)
+    {
+        float texture_width = GetScreenWidth() / static_cast<float>(COLS);//Width of each Texture
+        float texture_height = GetScreenHeight() / static_cast<float>(ROWS);//Height of each Texture
+        float texture_size = min(texture_width, texture_height);
+
+        float texture_position_x = (GetScreenWidth() / 2 - ((texture_size / 2) * COLS));
+
+        return texture_position_x + (texture_size * (2 * col + 1) / 2);
+    }
+
+    float GetGridCenterY(int row)
+    {
+        float texture_width = GetScreenWidth() / static_cast<float>(COLS);//Width of each Texture
+        float texture_height = GetScreenHeight() / static_cast<float>(ROWS);//Height of each Texture
+        float texture_size = min(texture_width, texture_height);
+
+        float texture_position_y = (GetScreenHeight() / 2 - ((texture_size / 2) * ROWS));
+
+        return texture_position_y + (texture_size * (2 * row + 1) / 2);
+    }
+
     // Destructor to deallocate memory
     ~GameBoard() {
         for (int i = 0; i < ROWS; i++) {
@@ -304,8 +350,8 @@ public:
     Texture redTex_magnified = LoadTexture("red_magnified.png");
     Texture yellowTex_magnified = LoadTexture("yellow_magnified.png");
 
-    // Function to draw the game board
-    void Draw() {
+    // Function to draw the game board (Polymorphism Applied)
+    virtual void Draw() {
         float texture_width = GetScreenWidth() / static_cast<float>(COLS);//Width of each Texture
         float texture_height = GetScreenHeight() / static_cast<float>(ROWS);//Height of each Texture
         float texture_size = min(texture_width, texture_height);
@@ -430,6 +476,14 @@ public:
             row[column_num]--;
 
         }
+        if (count == getRows() * getCols()) {
+            BeginDrawing();
+            ClearBackground(RAYWHITE);
+            //Iss jaga pe draw image design kar ke daalni hain
+            EndDrawing();
+            WaitTime(5.0);
+            throw GameEnd();
+        }
         int win_row = 0, win_col = 0;
         bool right_diagnol = false, left_diagnol = false, vertical = false, horizontal = false;
         int mark = -5;
@@ -483,9 +537,10 @@ public:
             WaitTime(2.0);
             BeginDrawing();
             ClearBackground(RAYWHITE);
+            //Iss jaga pe if statements ke saath ending images design kar ke daalni hain
             EndDrawing();
             WaitTime(5.0);
-            exit(0);
+            throw GameEnd();
         }
 
         if (AI && count % 2 != 0) {
@@ -587,6 +642,36 @@ public:
         delete[]grid;
     }
 
+    void Draw() override
+    {
+        GameBoard::Draw();
+        if (AI) {
+            int COLS = getCols();
+            int ROWS = getRows();
+            float texture_width = GetScreenWidth() / static_cast<float>(COLS);//Width of each Texture
+            float texture_height = GetScreenHeight() / static_cast<float>(ROWS);//Height of each Texture
+            float texture_size = min(texture_width, texture_height);
+
+            int font_size = texture_size * 0.6;
+
+            if (COLS >= 6) {
+                DrawText("A", GetGridCenterX(0) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+                DrawText("I", GetGridCenterX(1) - font_size / 8, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+
+                DrawText("G", GetGridCenterX(COLS - 4) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+                DrawText("A", GetGridCenterX(COLS - 3) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+                DrawText("M", GetGridCenterX(COLS - 2) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+                DrawText("E", GetGridCenterX(COLS - 1) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+            }
+            else if (COLS >= 2) {
+                DrawText("A", GetGridCenterX(COLS / 2 - 1) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+                DrawText("I", GetGridCenterX(COLS / 2) - font_size / 8, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+            }
+            else {
+                DrawText("AI", GetGridCenterX(0) - font_size * 0.21875, GetGridCenterY(0) - font_size / 4, font_size / 2, WHITE);
+            }
+        }
+    }
 };
 
 int main() {
@@ -640,7 +725,7 @@ int main() {
         BeginDrawing();
 
         if (elapsedTime < duration) {
-            DrawTexturePro(textureLoadPage, { 0,0,static_cast<float>(textureLoadPage.width),static_cast<float>(textureLoadPage.height) }, // Sourse
+            DrawTexturePro(textureLoadPage, { 0,0,static_cast<float>(textureLoadPage.width),static_cast<float>(textureLoadPage.height) }, // Source
                 destination_Load, { 0,0 }, 0, WHITE); // Here to draw i.e. destination
         }
 
@@ -668,18 +753,25 @@ int main() {
                     select_level(textureStartPage, destination_Start, clicked);
 
                     twoPlayer twoPlayerGame(true);
-                    while (!WindowShouldClose()) {
-                        BeginDrawing();
-                        ClearBackground(RAYWHITE);
+                    try {
+                        while (!WindowShouldClose()) {
+                            BeginDrawing();
+                            ClearBackground(RAYWHITE);
 
-                        twoPlayerGame.Draw();
-                        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && (clicked == 2) && count % 2 == 0) {
-                            cout << "in main count = " << count << endl;
-                            Vector2 mousePos = GetMousePosition();
-                            twoPlayerGame.click(mousePos);
+                            twoPlayerGame.Draw();
+                            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && (clicked >= 2) && count % 2 == 0) {
+                                cout << "in main count = " << count << endl;
+                                Vector2 mousePos = GetMousePosition();
+                                twoPlayerGame.click(mousePos);
+                            }
+                            clicked++;
+                            EndDrawing();
                         }
-                        clicked++;
-                        EndDrawing();
+
+                    }
+                    catch (GameEnd&)
+                    {
+                        cout << "Game Ended" << endl;
                     }
                 }
             }
@@ -700,17 +792,23 @@ int main() {
 
                     twoPlayer twoPlayerGame;
 
-                    while (!WindowShouldClose()) {
-                        BeginDrawing();
-                        ClearBackground(RAYWHITE);
+                    try {
+                        while (!WindowShouldClose()) {
+                            BeginDrawing();
+                            ClearBackground(RAYWHITE);
 
-                        twoPlayerGame.Draw();
-                        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && clicked) {
-                            Vector2 mousePos = GetMousePosition();
-                            twoPlayerGame.click(mousePos);
+                            twoPlayerGame.Draw();
+                            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && clicked) {
+                                Vector2 mousePos = GetMousePosition();
+                                twoPlayerGame.click(mousePos);
+                            }
+                            clicked++;
+                            EndDrawing();
                         }
-                        clicked++;
-                        EndDrawing();
+                    }
+                    catch (GameEnd&)
+                    {
+                        cout << "Game Ended" << endl;
                     }
                 }
             }
@@ -740,6 +838,7 @@ int main() {
 
                 if (CheckCollisionPointRec({ mouseX, mouseY }, rect)) {
                     cout << "Tata goodbye khatam ! " << endl;
+                    break;
                 }
             }
         }
@@ -748,6 +847,6 @@ int main() {
     }
 
     CloseWindow();
-
+    cout << "Memory Leaks: " << _CrtDumpMemoryLeaks() << endl;
     return 0;
 }
