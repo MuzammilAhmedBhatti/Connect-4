@@ -11,11 +11,86 @@ int difficulty = 0;
 
 class GameEnd {};
 
+Rectangle textureLoadPage_math(Texture textureLoadPage) {
+    float destinationWidth = 0, destinationHeight = 0;
+
+    //Calculating ratio so that we can scale the image accordingly
+    float textureAspectRatio = static_cast<float>(textureLoadPage.width) / textureLoadPage.height;
+
+    // Calculate destination rectangle size while maintaining aspect ratio
+    if (textureAspectRatio > 1) {
+        // Landscape orientation
+        destinationWidth = GetScreenWidth();
+        destinationHeight = destinationWidth / textureAspectRatio;
+    }
+    else {
+        // Portrait or square orientation
+        destinationHeight = GetScreenHeight();
+        destinationWidth = destinationHeight * textureAspectRatio;
+    }
+
+    if (destinationWidth > GetScreenWidth()) {
+        destinationWidth = GetScreenWidth();
+        destinationHeight = destinationWidth / textureAspectRatio;
+    }
+    if (destinationHeight > GetScreenHeight()) {
+        destinationHeight = GetScreenHeight();
+        destinationWidth = destinationHeight * textureAspectRatio;
+    }
+
+    Rectangle destination_Load{
+            (GetScreenWidth() - destinationWidth) / 2,
+            (GetScreenHeight() - destinationHeight) / 2,
+            destinationWidth,
+            destinationHeight
+    };
+
+    return destination_Load;
+}
+
+Rectangle textureStartPage_math(Texture textureLoadPage) {
+    float destinationWidth = 0, destinationHeight = 0;
+
+    //Calculating ratio so that we can scale the image accordingly
+    float textureAspectRatio = static_cast<float>(textureLoadPage.width) / textureLoadPage.height;
+
+    // Calculate destination rectangle size while maintaining aspect ratio
+    if (textureAspectRatio > 1) {
+        // Landscape orientation
+        destinationWidth = GetScreenWidth();
+        destinationHeight = destinationWidth / textureAspectRatio;
+    }
+    else {
+        // Portrait or square orientation
+        destinationHeight = GetScreenHeight();
+        destinationWidth = destinationHeight * textureAspectRatio;
+    }
+
+    if (destinationWidth > GetScreenWidth()) {
+        destinationWidth = GetScreenWidth();
+        destinationHeight = destinationWidth / textureAspectRatio;
+    }
+    if (destinationHeight > GetScreenHeight()) {
+        destinationHeight = GetScreenHeight();
+        destinationWidth = destinationHeight * textureAspectRatio;
+    }
+
+    Rectangle destination_Start{
+            (GetScreenWidth() - destinationWidth) / 2,
+            (GetScreenHeight() - destinationHeight) / 2,
+            destinationWidth,
+            destinationHeight
+    };
+
+    return destination_Start;
+}
+
 void select_level(Texture textureStartPage, Rectangle destination_Start, int& clicked) {
     clicked = 0;
     while (!WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
+        destination_Start = textureStartPage_math(textureStartPage);
         Color darkBrightRed = { 200, 0, 0, 255 };
         DrawTexturePro(textureStartPage, { 0,0,static_cast<float>(textureStartPage.width),static_cast<float>(textureStartPage.height) }, // Source
             destination_Start, { 0,0 }, 0, WHITE); // Here to draw i.e. destination
@@ -698,35 +773,18 @@ int main() {
 
         elapsedTime += GetFrameTime();
 
-        //Calculating ratio so that we can scale the image accordingly
-        float Scale_X_Load = static_cast<float>(GetScreenWidth()) / textureLoadPage.width;
-        float Scale_Y_Load = static_cast<float>(GetScreenHeight()) / textureLoadPage.height;
-
-        float Scale_X_Start = static_cast<float>(GetScreenWidth()) / textureStartPage.width;
-        float Scale_Y_Start = static_cast<float>(GetScreenHeight()) / textureStartPage.height;
-
-
-        //Using Rectangle class to select the position where image needs to be fit
-        //Not making object as this class does not have constructor so we use {} to directly assign values 
-        Rectangle destination_Load{
-            0,
-            0,//top left corner (x,y)
-            static_cast<float>(textureLoadPage.width) * Scale_X_Load,   // width of the rectangle
-            static_cast<float>(textureLoadPage.height) * Scale_Y_Load   // height of the rectangle
-        };
-
-        Rectangle destination_Start{
-            0,
-            0,//top left corner (x,y)
-            static_cast<float>(textureStartPage.width) * Scale_X_Start,   // width of the rectangle
-            static_cast<float>(textureStartPage.height) * Scale_Y_Start   // height of the rectangle
-        };
+        Rectangle destination_Load = textureLoadPage_math(textureLoadPage);
+        Rectangle destination_Start = textureStartPage_math(textureStartPage);
 
         BeginDrawing();
-
         if (elapsedTime < duration) {
-            DrawTexturePro(textureLoadPage, { 0,0,static_cast<float>(textureLoadPage.width),static_cast<float>(textureLoadPage.height) }, // Source
-                destination_Load, { 0,0 }, 0, WHITE); // Here to draw i.e. destination
+
+            DrawTexturePro(textureLoadPage,
+                { 0, 0, static_cast<float>(textureLoadPage.width), static_cast<float>(textureLoadPage.height) },
+                destination_Load,
+                { 0,0 },
+                0,
+                WHITE); // Destination            
         }
 
         if (elapsedTime >= duration) {
@@ -734,9 +792,14 @@ int main() {
             if (count_ignore_unload_texture == 1) {
                 UnloadTexture(textureLoadPage);
             }
+
             count_ignore_unload_texture++;
-            DrawTexturePro(textureStartPage, { 0,0,static_cast<float>(textureStartPage.width),static_cast<float>(textureStartPage.height) }, // Source
-                destination_Start, { 0,0 }, 0, WHITE); // Here to draw i.e. destination
+
+            DrawTexturePro(textureStartPage, { 0,0,static_cast<float>(textureStartPage.width),static_cast<float>(textureStartPage.height) },
+                destination_Start,
+                { 0,0 },
+                0,
+                WHITE); // Here to draw i.e. destination
 
             //Single Player
             DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 8, GetScreenWidth() / 5, GetScreenHeight() / 10, darkBrightRed);
@@ -748,7 +811,7 @@ int main() {
                 Rectangle rect = { (float)(GetScreenWidth() / 2) - (GetScreenWidth() / 11), (float)GetScreenHeight() / 8, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
 
                 if (CheckCollisionPointRec({ mouseX, mouseY }, rect)) {
-                    count = 0;
+                    count = 0, difficulty = 0;
                     cout << "Artificial Intelligence" << endl;
                     select_level(textureStartPage, destination_Start, clicked);
 
