@@ -11,43 +11,6 @@ int difficulty = 0;
 
 class GameEnd {};
 
-Rectangle textureLoadPage_math(Texture textureLoadPage) {
-    float destinationWidth = 0, destinationHeight = 0;
-
-    //Calculating ratio so that we can scale the image accordingly
-    float textureAspectRatio = static_cast<float>(textureLoadPage.width) / textureLoadPage.height;
-
-    // Calculate destination rectangle size while maintaining aspect ratio
-    if (textureAspectRatio > 1) {
-        // Landscape orientation
-        destinationWidth = GetScreenWidth();
-        destinationHeight = destinationWidth / textureAspectRatio;
-    }
-    else {
-        // Portrait or square orientation
-        destinationHeight = GetScreenHeight();
-        destinationWidth = destinationHeight * textureAspectRatio;
-    }
-
-    if (destinationWidth > GetScreenWidth()) {
-        destinationWidth = GetScreenWidth();
-        destinationHeight = destinationWidth / textureAspectRatio;
-    }
-    if (destinationHeight > GetScreenHeight()) {
-        destinationHeight = GetScreenHeight();
-        destinationWidth = destinationHeight * textureAspectRatio;
-    }
-
-    Rectangle destination_Load{
-            (GetScreenWidth() - destinationWidth) / 2,
-            (GetScreenHeight() - destinationHeight) / 2,
-            destinationWidth,
-            destinationHeight
-    };
-
-    return destination_Load;
-}
-
 Rectangle textureStartPage_math(Texture textureLoadPage) {
     float destinationWidth = 0, destinationHeight = 0;
 
@@ -773,7 +736,7 @@ int main() {
 
         elapsedTime += GetFrameTime();
 
-        Rectangle destination_Load = textureLoadPage_math(textureLoadPage);
+        Rectangle destination_Load = textureStartPage_math(textureLoadPage);
         Rectangle destination_Start = textureStartPage_math(textureStartPage);
 
         BeginDrawing();
