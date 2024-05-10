@@ -39,10 +39,10 @@ Rectangle textureStartPage_math(Texture textureLoadPage) {
     }
 
     Rectangle destination_Start{
-            (GetScreenWidth() - destinationWidth) / 2,
-            (GetScreenHeight() - destinationHeight) / 2,
-            destinationWidth,
-            destinationHeight
+        (GetScreenWidth() - destinationWidth) / 2,
+        (GetScreenHeight() - destinationHeight) / 2,
+        destinationWidth,
+        destinationHeight
     };
 
     return destination_Start;
@@ -84,221 +84,247 @@ void select_level(Texture textureStartPage, Rectangle destination_Start, int& cl
         EndDrawing();
     }
 }
-void makeMove(int**& b, int c, int p, int rows, int cols) {
-    for (int r = rows - 1; r >= 0; r--) {
-        if (b[r][c] == 0) {
-            b[r][c] = p;
-            break;
-        }
-    }
-}
-int** copyBoard(int** grid, int rows, int cols) {
-    int** copied_board = new int* [rows];
-    for (int i = 0; i < rows; i++) {
-        copied_board[i] = new int[cols];
-        for (int j = 0; j < cols; j++) {
-            copied_board[i][j] = grid[i][j];
-        }
-    }
-    return copied_board;
-}
-bool winningMove(int**& grid, int p, int rows, int cols) {
-    int winSequence = 0; // to count adjacent pieces
-    // for horizontal checks
-    for (int c = 0; c < cols - 3; c++) { // for each column
-        for (int r = 0; r < rows; r++) { // each row
-            for (int i = 0; i < 4; i++) { // recall you need 4 to win
-                if (grid[r][c + i] == p) { // if not all pieces match
-                    winSequence++; // add sequence count
-                }
-                if (winSequence == 4) { return true; } // if 4 in row
-            }
-            winSequence = 0; // reset counter
-        }
-    }
-    // vertical checks
-    for (int c = 0; c < cols; c++) {
-        for (int r = rows - 1; r >= 3; r--) {
-            for (int i = 0; i < 4; i++) {
-                if (grid[r - i][c] == p) {
-                    winSequence++;
-                }
-                if (winSequence == 4) { return true; }
-            }
-            winSequence = 0;
-        }
-    }
-    // the below two are diagonal checks
-    for (int c = 0; c < cols - 3; c++) {
-        for (int r = rows - 1; r >= 3; r--) {
-            for (int i = 0; i < 4; i++) {
-                if (grid[r - i][c + i] == p) {
-                    winSequence++;
-                }
-                if (winSequence == 4) { return true; }
-            }
-            winSequence = 0;
-        }
-    }
-    for (int c = cols - 1; c >= 3; c--) {
-        for (int r = rows - 1; r >= 3; r--) {
-            for (int i = 0; i < 4; i++) {
-                if (grid[r - i][c - i] == p) {
-                    winSequence++;
-                }
-                if (winSequence == 4) { return true; }
-            }
-            winSequence = 0;
-        }
-    }
-    return false; // otherwise no winning move
-}
-int heurFunction(int good, int bad, int empty) {
-    int score = 0;
-    if (good == 4) { score += 500001; } // preference to go for winning move vs. block
-    else if (good == 3 && empty == 1) { score += 5000 + should_win; }
-    else if (good == 2 && empty == 2) { score += 500 + should_win; }
-    else if (bad == 2 && empty == 2) { score -= 500 + !should_win; } // preference to block
-    else if (bad == 3 && empty == 1) { score -= 5000 + !should_win; } // preference to block
-    else if (bad == 4) { score -= 500000; }
-    return score;
-}
-int scoreSet(int* set, int p) {
-    int good = 0; // points in favor of p
-    int bad = 0; // points against p
-    int empty = 0; // neutral spots
-    for (int i = 0; i < 4; i++) { // just enumerate how many of each
-        good += (set[i] == p) ? 1 : 0;
-        bad += (set[i] == 1 || set[i] == 2) ? 1 : 0;
-        empty += (set[i] == 0) ? 1 : 0;
-    }
-    // bad was calculated as (bad + good), so remove good
-    bad -= good;
-    return heurFunction(good, bad, empty);
-}
-int tabScore(int** grid, int p, int rows, int cols) {
-    int rs[rows], cs[cols], set[4], score = 0;
 
-    //Horizontal
-    for (int r = 0; r < rows; r++) {
-        for (int c = 0; c < cols; c++) {
-            rs[c] = grid[r][c]; // this is a distinct row alone
-        }
-        for (int c = 0; c < cols - 3; c++) {
-            for (int i = 0; i < 4; i++) {
-                set[i] = rs[c + i]; // for each possible "set" of 4 spots from that row
+class artificialIntelligence {
+public:
+    void makeMove(int**& grid, int col_num, int mark, int rows, int cols) {
+        for (int i = rows - 1; i >= 0; i--) {
+            if (grid[i][col_num] == 0) {
+                grid[i][col_num] = mark;
+                break;
             }
-            score += scoreSet(set, p); // find score
         }
     }
-    // vertical
-    for (int c = 0; c < cols; c++) {
-        for (int r = 0; r < rows; r++) {
-            cs[r] = grid[r][c];
-        }
-        for (int r = rows - 1; r >= 3; r--) {
-            for (int i = 0; i < 4; i++) {
-                set[i] = cs[r - i];
+    int** copyBoard(int** grid, int rows, int cols) {
+        int** copied_board = new int* [rows];
+        for (int i = 0; i < rows; i++) {
+            copied_board[i] = new int[cols];
+            for (int j = 0; j < cols; j++) {
+                copied_board[i][j] = grid[i][j];
             }
-            score += scoreSet(set, p);
         }
+        return copied_board;
     }
-    // diagonals
-    for (int r = rows - 1; r >= 3; r--) {
-        for (int c = 0; c < cols; c++) {
-            rs[c] = grid[r][c];
-        }
-        for (int c = 0; c < cols - 3; c++) {
-            for (int i = 0; i < 4; i++) {
-                set[i] = grid[r - i][c + i];
+    bool winningMove(int**& grid, int mark, int rows, int cols) {
+        int winPattern = 0; // to count adjacent pieces
+        // for horizontal checks
+        for (int column = 0; column < cols - 3; column++) { // for each column
+            for (int row = 0; row < rows; row++) { // each row
+                for (int i = 0; i < 4; i++) { // recall you need 4 to win
+                    if (grid[row][column + i] == mark) { // if not all pieces match
+                        winPattern++; // add sequence count
+                    }
+                    if (winPattern == 4) {
+                        return true;
+                    } // if 4 in row
+                }
+                winPattern = 0; // reset counter
             }
-            score += scoreSet(set, p);
         }
-    }
-    for (int r = rows - 1; r >= 3; r--) {
-        for (int c = 0; c < cols; c++) {
-            rs[c] = grid[r][c];
-        }
-        for (int c = cols - 1; c >= 3; c--) {
-            for (int i = 0; i < 4; i++) {
-                set[i] = grid[r - i][c - i];
+        // vertical checks
+        for (int column = 0; column < cols; column++) {
+            for (int row = rows - 1; row >= 3; row--) {
+                for (int i = 0; i < 4; i++) {
+                    if (grid[row - i][column] == mark) {
+                        winPattern++;
+                    }
+                    if (winPattern == 4) { return true; }
+                }
+                winPattern = 0;
             }
-            score += scoreSet(set, p);
         }
+        // the below two are diagonal checks
+        for (int column = 0; column < cols - 3; column++) {
+            for (int row = rows - 1; row >= 3; row--) {
+                for (int i = 0; i < 4; i++) {
+                    if (grid[row - i][column + i] == mark) {
+                        winPattern++;
+                    }
+                    if (winPattern == 4) { return true; }
+                }
+                winPattern = 0;
+            }
+        }
+        for (int column = cols - 1; column >= 3; column--) {
+            for (int row = rows - 1; row >= 3; row--) {
+                for (int i = 0; i < 4; i++) {
+                    if (grid[row - i][column - i] == mark) {
+                        winPattern++;
+                    }
+                    if (winPattern == 4) { return true; }
+                }
+                winPattern = 0;
+            }
+        }
+        return false; // otherwise no winning move
     }
-    return score;
-}
-int* miniMax(int**& grid, int d, int alf, int bet, int p, int rows, int cols) {
-    if (d == 0 || d >= (rows * cols) - count) {
-        int* result = new int[2];
-        result[0] = tabScore(grid, 2, rows, cols);
-        result[1] = -1;
-        return result;
+    int heurFunction(int good, int bad, int empty) {
+        int score = 0;
+        if (good == 4) { score += 500001; } // preference to go for winning move vs. block
+        else if (good == 3 && empty == 1) { score += 5000 + should_win; }
+        else if (good == 2 && empty == 2) { score += 500 + should_win; }
+        else if (bad == 2 && empty == 2) { score -= 500 + !should_win; } // preference to block
+        else if (bad == 3 && empty == 1) { score -= 5000 + !should_win; } // preference to block
+        else if (bad == 4) { score -= 500000; }
+        return score;
     }
+    int scoreSet(int* set, int mark) {
+        int good = 0; // points in favor of mark
+        int bad = 0; // points against mark
+        int empty = 0; // neutral spots
+        for (int i = 0; i < 4; i++) { // just enumerate how many of each
+            if (set[i] == mark) {
+                good += 1;
+            }
+            else {
+                good += 0;
+            }
 
-    if (p == 2) {
-        int* movesSoFar = new int[2];
-        movesSoFar[0] = INT_MIN;
-        movesSoFar[1] = -1;
-        if (winningMove(grid, 1, rows, cols)) {
-            return movesSoFar;
-        }
-        for (int c = 0; c < cols; c++) { // for each possible move
-            if (grid[0][c] == 0) { // but only if that column is non-full
-                int** newBoard = copyBoard(grid, rows, cols); // make a copy of the board
-                makeMove(newBoard, c, p, rows, cols); // try the move
-                int* score = miniMax(newBoard, d - 1, alf, bet, 1, rows, cols); // find move based on that new board state
-                for (int i = 0; i < rows; i++) {
-                    delete[] newBoard[i];
-                }
-                delete[] newBoard;
-                if (score[0] > movesSoFar[0]) { // if better score, replace it, and consider that best move (for now)
-                    movesSoFar[0] = score[0];
-                    movesSoFar[1] = c;
-                }
-                delete[] score;
-                alf = max(alf, movesSoFar[0]);
-                if (alf >= bet) { break; } // for pruning
+            if (set[i] == 1 || set[i] == 2) {
+                bad += 1;
+            }
+            else {
+                bad += 0;
+            }
+            if (set[i] == 0) {
+                empty += 1;
+            }
+            else {
+                empty += 0;
             }
         }
-        return movesSoFar;
+        // bad was calculated as (bad + good), so remove good
+        bad -= good;
+        return heurFunction(good, bad, empty);
     }
-    else {
-        int* movesSoFar = new int[2];
-        movesSoFar[0] = INT_MAX;
-        movesSoFar[1] = -1;
-        if (winningMove(grid, 2, rows, cols)) {
-            return movesSoFar;
-        }
-        for (int c = 0; c < cols; c++) { // for each possible move
-            if (grid[0][c] == 0) { // but only if that column is non-full
-                int** newBoard = copyBoard(grid, rows, cols); // make a copy of the board
-                makeMove(newBoard, c, p, rows, cols); // try the move
-                int* score = miniMax(newBoard, d - 1, alf, bet, 2, rows, cols); // find move based on that new board state
-                for (int i = 0; i < rows; i++) {
-                    delete[] newBoard[i];
-                }
-                delete[] newBoard;
-                if (score[0] < movesSoFar[0]) { // if better score, replace it, and consider that best move (for now)
-                    movesSoFar[0] = score[0];
-                    movesSoFar[1] = c;
-                }
-                delete[] score;
-                bet = min(bet, movesSoFar[0]);
-                if (alf >= bet) { break; } // for pruning
-            }
-        }
-        return movesSoFar;
-    }
-}
-int aiMove(int**& grid, int& d, int rows, int cols, int player) {
-    //cout << "ai move chal raha" << endl;
-    int* temp = miniMax(grid, d, 0 - INT_MAX, INT_MAX, player, rows, cols);
-    int temp2 = temp[1];
-    delete[] temp;
-    return temp2;
-}
+    int tabScore(int** grid, int mark, int rows, int cols) {
+        int row_arr[rows], column_arr[cols], set[4], score = 0;
 
+        //Horizontal
+        for (int row = 0; row < rows; row++) {
+            for (int column = 0; column < cols; column++) {
+                row_arr[column] = grid[row][column]; // this is a distinct row alone
+            }
+            for (int column = 0; column < cols - 3; column++) {
+                for (int i = 0; i < 4; i++) {
+                    set[i] = row_arr[column + i]; // for each possible "set" of 4 spots from that row
+                }
+                score += scoreSet(set, mark); // find score
+            }
+        }
+        // vertical
+        for (int column = 0; column < cols; column++) {
+            for (int row = 0; row < rows; row++) {
+                column_arr[row] = grid[row][column];
+            }
+            for (int row = rows - 1; row >= 3; row--) {
+                for (int i = 0; i < 4; i++) {
+                    set[i] = column_arr[row - i];
+                }
+                score += scoreSet(set, mark);
+            }
+        }
+        // diagonals
+        for (int row = rows - 1; row >= 3; row--) {
+            for (int column = 0; column < cols; column++) {
+                row_arr[column] = grid[row][column];
+            }
+            for (int column = 0; column < cols - 3; column++) {
+                for (int i = 0; i < 4; i++) {
+                    set[i] = grid[row - i][column + i];
+                }
+                score += scoreSet(set, mark);
+            }
+        }
+        for (int row = rows - 1; row >= 3; row--) {
+            for (int column = 0; column < cols; column++) {
+                row_arr[column] = grid[row][column];
+            }
+            for (int column = cols - 1; column >= 3; column--) {
+                for (int i = 0; i < 4; i++) {
+                    set[i] = grid[row - i][column - i];
+                }
+                score += scoreSet(set, mark);
+            }
+        }
+        return score;
+    }
+    int* miniMax(int**& grid, int depth, int alf, int bet, int mark, int rows, int cols) {
+        if (depth == 0 || depth >= (rows * cols) - count) {
+            int* result = new int[2];
+            result[0] = tabScore(grid, 2, rows, cols);
+            result[1] = -1;
+            return result;
+        }
+
+        if (mark == 2) {
+            int* movesDoneTillNow = new int[2];
+            movesDoneTillNow[0] = INT_MIN;
+            movesDoneTillNow[1] = -1;
+            if (winningMove(grid, 1, rows, cols)) {
+                return movesDoneTillNow;
+            }
+            for (int column = 0; column < cols; column++) { // for each possible move
+                if (grid[0][column] == 0) { // but only if that column is non-full
+                    int** updatedBoard = copyBoard(grid, rows, cols); // make a copy of the board
+                    makeMove(updatedBoard, column, mark, rows, cols); // try the move
+                    int* score = miniMax(updatedBoard, depth - 1, alf, bet, 1, rows, cols); // find move based on that new board state
+                    for (int i = 0; i < rows; i++) {
+                        delete[] updatedBoard[i];
+                    }
+                    delete[] updatedBoard;
+                    if (score[0] > movesDoneTillNow[0]) { // if better score, replace it, and consider that best move (for now)
+                        movesDoneTillNow[0] = score[0];
+                        movesDoneTillNow[1] = column;
+                    }
+                    delete[] score;
+                    alf = max(alf, movesDoneTillNow[0]);
+                    if (alf >= bet) {
+                        break;
+                    } // for pruning
+                }
+            }
+            return movesDoneTillNow;
+        }
+        else {
+            int* movesDoneTillNow = new int[2];
+            movesDoneTillNow[0] = INT_MAX;
+            movesDoneTillNow[1] = -1;
+            if (winningMove(grid, 2, rows, cols)) {
+                return movesDoneTillNow;
+            }
+            for (int column = 0; column < cols; column++) { // for each possible move
+                if (grid[0][column] == 0) { // but only if that column is non-full
+                    int** updatedBoard = copyBoard(grid, rows, cols); // make a copy of the board
+                    makeMove(updatedBoard, column, mark, rows, cols); // try the move
+                    int* score = miniMax(updatedBoard, depth
+                        - 1, alf, bet, 2, rows, cols); // find move based on that new board state
+                    for (int i = 0; i < rows; i++) {
+                        delete[] updatedBoard[i];
+                    }
+                    delete[] updatedBoard;
+                    if (score[0] < movesDoneTillNow[0]) { // if better score, replace it, and consider that best move (for now)
+                        movesDoneTillNow[0] = score[0];
+                        movesDoneTillNow[1] = column;
+                    }
+                    delete[] score;
+                    bet = min(bet, movesDoneTillNow[0]);
+                    if (alf >= bet) {
+                        break;
+                    } // for pruning
+                }
+            }
+            return movesDoneTillNow;
+        }
+    }
+    int aiMove(int**& grid, int& depth, int rows, int cols, int player) {
+        //cout << "ai move chal raha" << endl;
+        int* temp = miniMax(grid, depth, 0 - INT_MAX, INT_MAX, player, rows, cols);
+        int temp2 = temp[1];
+        delete[] temp;
+        return temp2;
+    }
+};
 
 class GameBoard {
 private:
@@ -413,6 +439,7 @@ class twoPlayer : public GameBoard {
     int yellowTex_number = 2;
     int redTex_number = 1;
     int column_num = 0;
+    artificialIntelligence Ai;
 public:
     twoPlayer() {
         grid = new int* [getRows()];
@@ -582,12 +609,12 @@ public:
         }
 
         if (AI && count % 2 != 0) {
-            int aiCol = aiMove(grid, difficulty, getRows(), getCols(), 2);
+            int aiCol = Ai.aiMove(grid, difficulty, getRows(), getCols(), 2);
             cout << "Column number from AI " << aiCol << endl;
             while (aiCol == -1) {
                 difficulty -= 1;
                 if (difficulty != 0) {
-                    aiCol = aiMove(grid, difficulty, getRows(), getCols(), 2);
+                    aiCol = Ai.aiMove(grid, difficulty, getRows(), getCols(), 2);
                     cout << "Column number from AI " << aiCol << endl;
                 }
                 else {
