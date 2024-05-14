@@ -1,7 +1,7 @@
 #include <iostream>
 #include <limits.h>
 #include "raylib.h"
-#include<cstdlib>
+#include <cstdlib>
 #include <crtdbg.h>
 
 using namespace std;
@@ -11,7 +11,7 @@ int difficulty = 0;
 
 class GameEnd {};
 
-Rectangle textureStartPage_math(Texture textureLoadPage) {
+Rectangle texturePage_math(Texture textureLoadPage) {
     float destinationWidth = 0, destinationHeight = 0;
 
     //Calculating ratio so that we can scale the image accordingly
@@ -52,23 +52,19 @@ void select_level(Texture textureStartPage, Rectangle destination_Start, int& cl
     clicked = 0;
     while (!WindowShouldClose()) {
         BeginDrawing();
-        ClearBackground(RAYWHITE);
-        destination_Start = textureStartPage_math(textureStartPage);
-        Color darkBrightRed = { 200, 0, 0, 255 };
+        ClearBackground(BLACK);
+        destination_Start = texturePage_math(textureStartPage);
         DrawTexturePro(textureStartPage, { 0,0,static_cast<float>(textureStartPage.width),static_cast<float>(textureStartPage.height) }, // Source
             destination_Start, { 0,0 }, 0, WHITE); // Here to draw i.e. destination
 
-        DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 8, GetScreenWidth() / 5, GetScreenHeight() / 10, darkBrightRed);
-        DrawText("Easy", (GetScreenWidth() / 2) - (GetScreenWidth() / 11) + 10, GetScreenHeight() / 8 + 10, GetScreenWidth() / 38, WHITE);
-        Rectangle rect_easy = { (float)(GetScreenWidth() / 2) - (GetScreenWidth() / 11), (float)GetScreenHeight() / 8, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
+        float button_x_easy = destination_Start.x + (destination_Start.width * 0.37), button_y_easy = destination_Start.y + (destination_Start.height * 0.276), width = (destination_Start.width * 0.262), height = (destination_Start.height * 0.072);
+        Rectangle rect_easy = { button_x_easy, button_y_easy , width, height };
 
-        DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 4, GetScreenWidth() / 5, GetScreenHeight() / 10, darkBrightRed);
-        DrawText("Medium", (GetScreenWidth() / 2) - (GetScreenWidth() / 11) + 10, GetScreenHeight() / 4 + 10, GetScreenWidth() / 38, WHITE);
-        Rectangle rect_medium = { (float)(GetScreenWidth() / 2) - (GetScreenWidth() / 11), (float)GetScreenHeight() / 4, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
+        float button_x_medium = destination_Start.x + (destination_Start.width * 0.37), button_y_medium = destination_Start.y + (destination_Start.height * 0.396);
+        Rectangle rect_medium = { button_x_medium, button_y_medium , width, height };
 
-        DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 2.7, GetScreenWidth() / 5, GetScreenHeight() / 10, darkBrightRed);
-        DrawText("Hard", (GetScreenWidth() / 2) - (GetScreenWidth() / 11) + 10, GetScreenHeight() / 2.7 + 10, GetScreenWidth() / 38, WHITE);
-        Rectangle rect_hard = { (float)(GetScreenWidth() / 2) - (GetScreenWidth() / 11), (float)GetScreenHeight() / 2.7f, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
+        float button_x_hard = destination_Start.x + (destination_Start.width * 0.37), button_y_hard = destination_Start.y + (destination_Start.height * 0.517);
+        Rectangle rect_hard = { button_x_hard, button_y_hard, width, height };
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             if (clicked) {
@@ -318,7 +314,6 @@ public:
         }
     }
     int aiMove(int**& grid, int& depth, int rows, int cols, int player) {
-        //cout << "ai move chal raha" << endl;
         int* temp = miniMax(grid, depth, 0 - INT_MAX, INT_MAX, player, rows, cols);
         int temp2 = temp[1];
         delete[] temp;
@@ -439,6 +434,7 @@ class twoPlayer : public GameBoard {
     int yellowTex_number = 2;
     int redTex_number = 1;
     int column_num = 0;
+    Font customFont = LoadFont("Roboto-Regular.ttf");
     artificialIntelligence Ai;
 public:
     twoPlayer() {
@@ -513,7 +509,7 @@ public:
             //     }
             // }
             while (animation <= row[column_num]) {
-                ClearBackground(RAYWHITE);
+                ClearBackground(BLACK);
                 Tex_arr[animation][column_num] = yellowTex;
                 if (animation > 0) { Tex_arr[animation - 1][column_num] = getEmptyTexture(); }
                 WaitTime(0.05);
@@ -523,13 +519,12 @@ public:
             }
             grid[row[column_num]][column_num] = 1;
             row[column_num]--;
-            cout << "Idher pohanchaa count =" << count << endl;//but not reaching here on my click
         }
 
         else if (count % 2 == 0) {
             int animation = 0;
             while (animation <= row[column_num]) {
-                ClearBackground(RAYWHITE);
+                ClearBackground(BLACK);
                 Tex_arr[animation][column_num] = redTex;
                 if (animation > 0) { Tex_arr[animation - 1][column_num] = getEmptyTexture(); }
                 WaitTime(0.05);
@@ -543,10 +538,16 @@ public:
         }
         if (count == getRows() * getCols()) {
             BeginDrawing();
-            ClearBackground(RAYWHITE);
-            //Iss jaga pe draw image design kar ke daalni hain
+            ClearBackground(BLACK);
+            Texture2D drawTexture = LoadTexture("draw.png");
+            Rectangle draw = texturePage_math(drawTexture);
+            DrawTexturePro(drawTexture, { 0,0,static_cast<float>(drawTexture.width),static_cast<float>(drawTexture.height) },
+                draw,
+                { 0,0 },
+                0,
+                WHITE);
             EndDrawing();
-            WaitTime(5.0);
+            WaitTime(3.0);
             throw GameEnd();
         }
         int win_row = 0, win_col = 0;
@@ -601,10 +602,36 @@ public:
             EndDrawing();
             WaitTime(2.0);
             BeginDrawing();
-            ClearBackground(RAYWHITE);
-            //Iss jaga pe if statements ke saath ending images design kar ke daalni hain
+            ClearBackground(BLACK);
+            if (mark == 1) {
+                Texture2D player1wins_texture = LoadTexture("player1wins.png");
+                Rectangle player1 = texturePage_math(player1wins_texture);
+                DrawTexturePro(player1wins_texture, { 0,0,static_cast<float>(player1wins_texture.width),static_cast<float>(player1wins_texture.height) },
+                    player1,
+                    { 0,0 },
+                    0,
+                    WHITE);
+            }
+            else if (mark == 2 && !AI) {
+                Texture2D player2wins_texture = LoadTexture("player2wins.png");
+                Rectangle player2 = texturePage_math(player2wins_texture);
+                DrawTexturePro(player2wins_texture, { 0,0,static_cast<float>(player2wins_texture.width),static_cast<float>(player2wins_texture.height) },
+                    player2,
+                    { 0,0 },
+                    0,
+                    WHITE);
+            }
+            else if (mark == 2 && AI) {
+                Texture2D aiwins_texture = LoadTexture("aiwins.png");
+                Rectangle ai = texturePage_math(aiwins_texture);
+                DrawTexturePro(aiwins_texture, { 0,0,static_cast<float>(aiwins_texture.width),static_cast<float>(aiwins_texture.height) },
+                    ai,
+                    { 0,0 },
+                    0,
+                    WHITE);
+            }
             EndDrawing();
-            WaitTime(5.0);
+            WaitTime(3.0);
             throw GameEnd();
         }
 
@@ -720,21 +747,38 @@ public:
             int font_size = texture_size * 0.6;
 
             if (COLS >= 6) {
-                DrawText("A", GetGridCenterX(0) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
-                DrawText("I", GetGridCenterX(1) - font_size / 8, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+                DrawTextEx(customFont, "A", { static_cast<float>(GetGridCenterX(0) - font_size * 0.3125), (GetGridCenterY(0) - font_size / 2) }, font_size, 0, WHITE);
+                DrawTextEx(customFont, "I", { GetGridCenterX(1) - font_size / 8, GetGridCenterY(0) - font_size / 2 }, font_size, 0, WHITE);
 
-                DrawText("G", GetGridCenterX(COLS - 4) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
-                DrawText("A", GetGridCenterX(COLS - 3) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
-                DrawText("M", GetGridCenterX(COLS - 2) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
-                DrawText("E", GetGridCenterX(COLS - 1) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+                DrawTextEx(customFont, "G", { static_cast<float>(GetGridCenterX(COLS - 4) - font_size * 0.3125), GetGridCenterY(0) - font_size / 2 }, font_size, 0, WHITE);
+                DrawTextEx(customFont, "A", { static_cast<float>(GetGridCenterX(COLS - 3) - font_size * 0.3125), GetGridCenterY(0) - font_size / 2 }, font_size, 0, WHITE);
+                DrawTextEx(customFont, "M", { static_cast<float>(GetGridCenterX(COLS - 2) - font_size * 0.3125), GetGridCenterY(0) - font_size / 2 }, font_size, 0, WHITE);
+                DrawTextEx(customFont, "E", { static_cast<float>(GetGridCenterX(COLS - 1) - font_size * 0.3125), GetGridCenterY(0) - font_size / 2 }, font_size, 0, WHITE);
             }
             else if (COLS >= 2) {
-                DrawText("A", GetGridCenterX(COLS / 2 - 1) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
-                DrawText("I", GetGridCenterX(COLS / 2) - font_size / 8, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+                DrawTextEx(customFont, "A", { static_cast<float>(GetGridCenterX(COLS / 2 - 1) - font_size * 0.3125), GetGridCenterY(0) - font_size / 2 }, font_size, 0, WHITE);
+                DrawTextEx(customFont, "I", { GetGridCenterX(COLS / 2) - font_size / 8, GetGridCenterY(0) - font_size / 2 }, font_size, 0, WHITE);
             }
             else {
-                DrawText("AI", GetGridCenterX(0) - font_size * 0.21875, GetGridCenterY(0) - font_size / 4, font_size / 2, WHITE);
+                DrawTextEx(customFont, "AI", { static_cast<float>(GetGridCenterX(0) - font_size * 0.21875), GetGridCenterY(0) - font_size / 4 }, font_size / 2, 0, WHITE);
             }
+
+            // if (COLS >= 6) {
+            //     DrawText("A", GetGridCenterX(0) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+            //     DrawText("I", GetGridCenterX(1) - font_size / 8, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+
+            //     DrawText("G", GetGridCenterX(COLS - 4) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+            //     DrawText("A", GetGridCenterX(COLS - 3) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+            //     DrawText("M", GetGridCenterX(COLS - 2) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+            //     DrawText("E", GetGridCenterX(COLS - 1) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+            // }
+            // else if (COLS >= 2) {
+            //     DrawText("A", GetGridCenterX(COLS / 2 - 1) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+            //     DrawText("I", GetGridCenterX(COLS / 2) - font_size / 8, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+            // }
+            // else {
+            //     DrawText("AI", GetGridCenterX(0) - font_size * 0.21875, GetGridCenterY(0) - font_size / 4, font_size / 2, WHITE);
+            // }
         }
     }
 };
@@ -747,14 +791,13 @@ int main() {
 
     Texture2D textureLoadPage = LoadTexture("coverPage.png");
     Texture2D textureStartPage = LoadTexture("StartPage.png");
-
+    Texture2D textureLevelPage = LoadTexture("LevelPage.png");
+    Texture2D textureInstructionsPage = LoadTexture("instructions.png");
     //For 3 seconds delay first
     float elapsedTime = 0.0f;
     const float duration = 3.0f;
 
     int count_ignore_unload_texture = 1;
-
-    Color darkBrightRed = { 200, 0, 0, 255 };
 
     SetTargetFPS(60);
 
@@ -763,8 +806,8 @@ int main() {
 
         elapsedTime += GetFrameTime();
 
-        Rectangle destination_Load = textureStartPage_math(textureLoadPage);
-        Rectangle destination_Start = textureStartPage_math(textureStartPage);
+        Rectangle destination_Load = texturePage_math(textureLoadPage);
+        Rectangle destination_Start = texturePage_math(textureStartPage);
 
         BeginDrawing();
         if (elapsedTime < duration) {
@@ -792,24 +835,23 @@ int main() {
                 WHITE); // Here to draw i.e. destination
 
             //Single Player
-            DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 8, GetScreenWidth() / 5, GetScreenHeight() / 10, darkBrightRed);
-            DrawText("Single Player", (GetScreenWidth() / 2) - (GetScreenWidth() / 11) + 10, GetScreenHeight() / 8 + 10, GetScreenWidth() / 38, WHITE);
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 int clicked = 0;
                 float mouseX = GetMouseX();
                 float mouseY = GetMouseY();
-                Rectangle rect = { (float)(GetScreenWidth() / 2) - (GetScreenWidth() / 11), (float)GetScreenHeight() / 8, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
+                float button_x = destination_Start.x + (destination_Start.width * 0.37), button_y = destination_Start.y + (destination_Start.height * 0.276), width = (destination_Start.width * 0.262), height = (destination_Start.height * 0.072);
+                Rectangle rect = { button_x, button_y , width, height };
 
                 if (CheckCollisionPointRec({ mouseX, mouseY }, rect)) {
                     count = 0, difficulty = 0;
                     cout << "Artificial Intelligence" << endl;
-                    select_level(textureStartPage, destination_Start, clicked);
+                    select_level(textureLevelPage, destination_Start, clicked);
 
                     twoPlayer twoPlayerGame(true);
                     try {
                         while (!WindowShouldClose()) {
                             BeginDrawing();
-                            ClearBackground(RAYWHITE);
+                            ClearBackground(BLACK);
 
                             twoPlayerGame.Draw();
                             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && (clicked >= 2) && count % 2 == 0) {
@@ -831,13 +873,12 @@ int main() {
 
 
             //Two Player
-            DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 4, GetScreenWidth() / 5, GetScreenHeight() / 10, darkBrightRed);
-            DrawText("Two Player", (GetScreenWidth() / 2) - (GetScreenWidth() / 11) + 10, GetScreenHeight() / 4 + 10, GetScreenWidth() / 38, WHITE);
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 int clicked = 0;
                 float mouseX = GetMouseX();
                 float mouseY = GetMouseY();
-                Rectangle rect = { (float)(GetScreenWidth() / 2) - (GetScreenWidth() / 11), (float)GetScreenHeight() / 4, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
+                float button_x = destination_Start.x + (destination_Start.width * 0.37), button_y = destination_Start.y + (destination_Start.height * 0.396), width = (destination_Start.width * 0.262), height = (destination_Start.height * 0.072);
+                Rectangle rect = { button_x, button_y , width, height };
 
                 if (CheckCollisionPointRec({ mouseX, mouseY }, rect)) {
                     count = 0;
@@ -848,7 +889,7 @@ int main() {
                     try {
                         while (!WindowShouldClose()) {
                             BeginDrawing();
-                            ClearBackground(RAYWHITE);
+                            ClearBackground(BLACK);
 
                             twoPlayerGame.Draw();
                             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && clicked) {
@@ -868,26 +909,35 @@ int main() {
 
 
             //Instructions
-            DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 2.7, GetScreenWidth() / 5, GetScreenHeight() / 10, darkBrightRed);
-            DrawText("Instructions", (GetScreenWidth() / 2) - (GetScreenWidth() / 11) + 10, GetScreenHeight() / 2.7 + 10, GetScreenWidth() / 38, WHITE);
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 float mouseX = GetMouseX();
                 float mouseY = GetMouseY();
-                Rectangle rect = { (float)(GetScreenWidth() / 2) - (GetScreenWidth() / 11), (float)GetScreenHeight() / 2.7f, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
+                float button_x = destination_Start.x + (destination_Start.width * 0.37), button_y = destination_Start.y + (destination_Start.height * 0.517), width = (destination_Start.width * 0.262), height = (destination_Start.height * 0.072);
+                Rectangle rect = { button_x, button_y, width, height };
 
                 if (CheckCollisionPointRec({ mouseX, mouseY }, rect)) {
+                    while (!WindowShouldClose()) {
+                        BeginDrawing();
+                        ClearBackground(BLACK);
+                        Rectangle instructions = texturePage_math(textureInstructionsPage);
+                        DrawTexturePro(textureInstructionsPage, { 0,0,static_cast<float>(textureInstructionsPage.width),static_cast<float>(textureStartPage.height) },
+                            instructions,
+                            { 0,0 },
+                            0,
+                            WHITE);
+                        EndDrawing();
+                    }
                     cout << "Ruk Mai Tere ko Batata hun ! " << endl;
                 }
             }
 
 
             //Exit
-            DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 2, GetScreenWidth() / 5, GetScreenHeight() / 10, darkBrightRed);
-            DrawText("Exit", (GetScreenWidth() / 2) - (GetScreenWidth() / 11) + 10, GetScreenHeight() / 2 + 10, GetScreenWidth() / 38, WHITE);
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 float mouseX = GetMouseX();
                 float mouseY = GetMouseY();
-                Rectangle rect = { (float)(GetScreenWidth() / 2) - (GetScreenWidth() / 11), (float)GetScreenHeight() / 2, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
+                float button_x = destination_Start.x + (destination_Start.width * 0.37), button_y = destination_Start.y + (destination_Start.height * 0.637), width = (destination_Start.width * 0.262), height = (destination_Start.height * 0.072);
+                Rectangle rect = { button_x, button_y , width, height };
 
                 if (CheckCollisionPointRec({ mouseX, mouseY }, rect)) {
                     cout << "Tata goodbye khatam ! " << endl;
@@ -895,7 +945,7 @@ int main() {
                 }
             }
         }
-        ClearBackground(RAYWHITE);
+        ClearBackground(BLACK);
         EndDrawing();
     }
 
