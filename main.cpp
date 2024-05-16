@@ -5,48 +5,12 @@
 #include <crtdbg.h>
 
 using namespace std;
+
 bool should_win = false;
 int count = 0;
 int difficulty = 0;
 
 class GameEnd {};
-
-Rectangle textureLoadPage_math(Texture textureLoadPage) {
-    float destinationWidth = 0, destinationHeight = 0;
-
-    //Calculating ratio so that we can scale the image accordingly
-    float textureAspectRatio = static_cast<float>(textureLoadPage.width) / textureLoadPage.height;
-
-    // Calculate destination rectangle size while maintaining aspect ratio
-    if (textureAspectRatio > 1) {
-        // Landscape orientation
-        destinationWidth = GetScreenWidth();
-        destinationHeight = destinationWidth / textureAspectRatio;
-    }
-    else {
-        // Portrait or square orientation
-        destinationHeight = GetScreenHeight();
-        destinationWidth = destinationHeight * textureAspectRatio;
-    }
-
-    if (destinationWidth > GetScreenWidth()) {
-        destinationWidth = GetScreenWidth();
-        destinationHeight = destinationWidth / textureAspectRatio;
-    }
-    if (destinationHeight > GetScreenHeight()) {
-        destinationHeight = GetScreenHeight();
-        destinationWidth = destinationHeight * textureAspectRatio;
-    }
-
-    Rectangle destination_Load{
-            (GetScreenWidth() - destinationWidth) / 2,
-            (GetScreenHeight() - destinationHeight) / 2,
-            destinationWidth,
-            destinationHeight
-    };
-
-    return destination_Load;
-}
 
 Rectangle textureStartPage_math(Texture textureLoadPage) {
     float destinationWidth = 0, destinationHeight = 0;
@@ -83,6 +47,45 @@ Rectangle textureStartPage_math(Texture textureLoadPage) {
     };
 
     return destination_Start;
+}
+
+Rectangle textureRectangle_math(Rectangle rec) {
+    float rect_width = 0, rect_height = 0;
+    float screen_width = GetScreenWidth() / 5;
+    float screen_height = GetScreenHeight() / 10;
+
+    //Calculating ratio so that we can scale the image accordingly
+    float textureAspectRatio = static_cast<float>(rec.width) / rec.height;
+
+    // Calculate destination rectangle size while maintaining aspect ratio
+    if (textureAspectRatio > 1) {
+        // Landscape orientation
+        rect_width = screen_width;
+        rect_height = rect_width / textureAspectRatio;
+    }
+    else {
+        // Portrait or square orientation
+        rect_height = screen_height;
+        rect_width = rect_height * textureAspectRatio;
+    }
+
+    if (rect_width > screen_width) {
+        rect_width = screen_width;
+        rect_height = rect_width / textureAspectRatio;
+    }
+    if (rect_height > screen_height) {
+        rect_height = screen_height;
+        rect_width = rect_height * textureAspectRatio;
+    }
+
+    Rectangle recta{
+            (screen_width - rect_width) / 2,
+            (screen_height - rect_height) / 2,
+            rect_width,
+            rect_height
+    };
+
+    return recta;
 }
 
 void select_level(Texture textureStartPage, Rectangle destination_Start, int& clicked) {
@@ -773,8 +776,11 @@ int main() {
 
         elapsedTime += GetFrameTime();
 
-        Rectangle destination_Load = textureLoadPage_math(textureLoadPage);
+        Rectangle rect = { float((GetScreenWidth() / 2) - (GetScreenWidth() / 11)), float(GetScreenHeight() / 8), float(GetScreenWidth() / 5), float(GetScreenHeight() / 10) };
+
+        Rectangle destination_Load = textureStartPage_math(textureLoadPage);
         Rectangle destination_Start = textureStartPage_math(textureStartPage);
+        Rectangle rec = textureRectangle_math(rect);
 
         BeginDrawing();
         if (elapsedTime < duration) {
@@ -802,7 +808,7 @@ int main() {
                 WHITE); // Here to draw i.e. destination
 
             //Single Player
-            DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 8, GetScreenWidth() / 5, GetScreenHeight() / 10, darkBrightRed);
+            DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 8, rec.width, rec.height, darkBrightRed);
             DrawText("Single Player", (GetScreenWidth() / 2) - (GetScreenWidth() / 11) + 10, GetScreenHeight() / 8 + 10, GetScreenWidth() / 38, WHITE);
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 int clicked = 0;
