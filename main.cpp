@@ -5,11 +5,10 @@
 #include <crtdbg.h>
 
 using namespace std;
-bool should_win = false;
+bool should_win = true;
 int count = 0;
 int difficulty = 0;
 
-class GameEnd {};
 
 Rectangle texturePage_math(Texture textureLoadPage) {
     float destinationWidth = 0, destinationHeight = 0;
@@ -72,7 +71,7 @@ void select_level(Texture textureStartPage, Rectangle destination_Start, int& cl
                 float mouseY = GetMouseY();
                 if (CheckCollisionPointRec({ mouseX, mouseY }, rect_easy)) difficulty = 1;
                 else if (CheckCollisionPointRec({ mouseX, mouseY }, rect_medium)) difficulty = 3;
-                else if (CheckCollisionPointRec({ mouseX, mouseY }, rect_hard)) difficulty = 5;
+                else if (CheckCollisionPointRec({ mouseX, mouseY }, rect_hard)) difficulty = 6;
             }
         }
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) clicked++;
@@ -80,6 +79,8 @@ void select_level(Texture textureStartPage, Rectangle destination_Start, int& cl
         EndDrawing();
     }
 }
+
+class GameEnd {};
 
 class artificialIntelligence {
 public:
@@ -293,8 +294,7 @@ public:
                 if (grid[0][column] == 0) { // but only if that column is non-full
                     int** updatedBoard = copyBoard(grid, rows, cols); // make a copy of the board
                     makeMove(updatedBoard, column, mark, rows, cols); // try the move
-                    int* score = miniMax(updatedBoard, depth
-                        - 1, alf, bet, 2, rows, cols); // find move based on that new board state
+                    int* score = miniMax(updatedBoard, depth - 1, alf, bet, 2, rows, cols); // find move based on that new board state
                     for (int i = 0; i < rows; i++) {
                         delete[] updatedBoard[i];
                     }
@@ -489,6 +489,7 @@ public:
 
         if (count % 2 != 0) {
             int animation = 0;
+            cout << "difficulty = " << difficulty << endl;
             // //Checking AI vs AI (only for checking purposes)
             // column_num = aiMove(grid, difficulty, getRows(), getCols(), 2);
             // while (column_num == -1) {
@@ -522,6 +523,7 @@ public:
         }
 
         else if (count % 2 == 0) {
+            cout << "difficulty = " << difficulty << endl;
             int animation = 0;
             while (animation <= row[column_num]) {
                 ClearBackground(BLACK);
@@ -600,7 +602,7 @@ public:
             }
             Draw();
             EndDrawing();
-            WaitTime(2.0);
+            WaitTime(1.0);
             BeginDrawing();
             ClearBackground(BLACK);
             if (mark == 1) {
@@ -920,7 +922,7 @@ int main() {
                         BeginDrawing();
                         ClearBackground(BLACK);
                         Rectangle instructions = texturePage_math(textureInstructionsPage);
-                        DrawTexturePro(textureInstructionsPage, { 0,0,static_cast<float>(textureInstructionsPage.width),static_cast<float>(textureStartPage.height) },
+                        DrawTexturePro(textureInstructionsPage, { 0,0,static_cast<float>(textureInstructionsPage.width),static_cast<float>(textureInstructionsPage.height) },
                             instructions,
                             { 0,0 },
                             0,
