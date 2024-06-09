@@ -1,18 +1,16 @@
 #include <iostream>
 #include <limits.h>
 #include "raylib.h"
-#include<cstdlib>
+#include <cstdlib>
 #include <crtdbg.h>
 
 using namespace std;
-
 bool should_win = false;
 int count = 0;
 int difficulty = 0;
 
-class GameEnd {};
 
-Rectangle textureStartPage_math(Texture textureLoadPage) {
+Rectangle textureLoadPage_math(Texture textureLoadPage) {
     float destinationWidth = 0, destinationHeight = 0;
 
     //Calculating ratio so that we can scale the image accordingly
@@ -39,20 +37,18 @@ Rectangle textureStartPage_math(Texture textureLoadPage) {
         destinationWidth = destinationHeight * textureAspectRatio;
     }
 
-    Rectangle destination_Start{
+    Rectangle destination_Load{
             (GetScreenWidth() - destinationWidth) / 2,
             (GetScreenHeight() - destinationHeight) / 2,
             destinationWidth,
             destinationHeight
     };
 
-    return destination_Start;
+    return destination_Load;
 }
 
-Rectangle textureRectangle_math(Rectangle rec) {
-    float rect_width = 0, rect_height = 0;
-    float screen_width = GetScreenWidth() / 5;
-    float screen_height = GetScreenHeight() / 10;
+Rectangle textureStartPage_math(Texture textureLoadPage) {
+    float destinationWidth = 0, destinationHeight = 0;
 
     //Calculating ratio so that we can scale the image accordingly
     float textureAspectRatio = static_cast<float>(rec.width) / rec.height;
@@ -78,11 +74,11 @@ Rectangle textureRectangle_math(Rectangle rec) {
         rect_width = rect_height * textureAspectRatio;
     }
 
-    Rectangle recta{
-            (screen_width - rect_width) / 2,
-            (screen_height - rect_height) / 2,
-            rect_width,
-            rect_height
+    Rectangle destination_Start{
+            (GetScreenWidth() - destinationWidth) / 2,
+            (GetScreenHeight() - destinationHeight) / 2,
+            destinationWidth,
+            destinationHeight
     };
 
     return recta;
@@ -92,23 +88,19 @@ void select_level(Texture textureStartPage, Rectangle destination_Start, int& cl
     clicked = 0;
     while (!WindowShouldClose()) {
         BeginDrawing();
-        ClearBackground(RAYWHITE);
-        destination_Start = textureStartPage_math(textureStartPage);
-        Color darkBrightRed = { 200, 0, 0, 255 };
+        ClearBackground(BLACK);
+        destination_Start = texturePage_math(textureStartPage);
         DrawTexturePro(textureStartPage, { 0,0,static_cast<float>(textureStartPage.width),static_cast<float>(textureStartPage.height) }, // Source
             destination_Start, { 0,0 }, 0, WHITE); // Here to draw i.e. destination
 
-        DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 8, GetScreenWidth() / 5, GetScreenHeight() / 10, darkBrightRed);
-        DrawText("Easy", (GetScreenWidth() / 2) - (GetScreenWidth() / 11) + 10, GetScreenHeight() / 8 + 10, GetScreenWidth() / 38, WHITE);
-        Rectangle rect_easy = { (float)(GetScreenWidth() / 2) - (GetScreenWidth() / 11), (float)GetScreenHeight() / 8, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
+        float button_x_easy = destination_Start.x + (destination_Start.width * 0.37), button_y_easy = destination_Start.y + (destination_Start.height * 0.276), width = (destination_Start.width * 0.262), height = (destination_Start.height * 0.072);
+        Rectangle rect_easy = { button_x_easy, button_y_easy , width, height };
 
-        DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 4, GetScreenWidth() / 5, GetScreenHeight() / 10, darkBrightRed);
-        DrawText("Medium", (GetScreenWidth() / 2) - (GetScreenWidth() / 11) + 10, GetScreenHeight() / 4 + 10, GetScreenWidth() / 38, WHITE);
-        Rectangle rect_medium = { (float)(GetScreenWidth() / 2) - (GetScreenWidth() / 11), (float)GetScreenHeight() / 4, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
+        float button_x_medium = destination_Start.x + (destination_Start.width * 0.37), button_y_medium = destination_Start.y + (destination_Start.height * 0.396);
+        Rectangle rect_medium = { button_x_medium, button_y_medium , width, height };
 
-        DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 2.7, GetScreenWidth() / 5, GetScreenHeight() / 10, darkBrightRed);
-        DrawText("Hard", (GetScreenWidth() / 2) - (GetScreenWidth() / 11) + 10, GetScreenHeight() / 2.7 + 10, GetScreenWidth() / 38, WHITE);
-        Rectangle rect_hard = { (float)(GetScreenWidth() / 2) - (GetScreenWidth() / 11), (float)GetScreenHeight() / 2.7f, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
+        float button_x_hard = destination_Start.x + (destination_Start.width * 0.37), button_y_hard = destination_Start.y + (destination_Start.height * 0.517);
+        Rectangle rect_hard = { button_x_hard, button_y_hard, width, height };
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             if (clicked) {
@@ -116,7 +108,7 @@ void select_level(Texture textureStartPage, Rectangle destination_Start, int& cl
                 float mouseY = GetMouseY();
                 if (CheckCollisionPointRec({ mouseX, mouseY }, rect_easy)) difficulty = 1;
                 else if (CheckCollisionPointRec({ mouseX, mouseY }, rect_medium)) difficulty = 3;
-                else if (CheckCollisionPointRec({ mouseX, mouseY }, rect_hard)) difficulty = 5;
+                else if (CheckCollisionPointRec({ mouseX, mouseY }, rect_hard)) difficulty = 6;
             }
         }
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) clicked++;
@@ -124,221 +116,247 @@ void select_level(Texture textureStartPage, Rectangle destination_Start, int& cl
         EndDrawing();
     }
 }
-void makeMove(int**& b, int c, int p, int rows, int cols) {
-    for (int r = rows - 1; r >= 0; r--) {
-        if (b[r][c] == 0) {
-            b[r][c] = p;
-            break;
-        }
-    }
-}
-int** copyBoard(int** grid, int rows, int cols) {
-    int** copied_board = new int* [rows];
-    for (int i = 0; i < rows; i++) {
-        copied_board[i] = new int[cols];
-        for (int j = 0; j < cols; j++) {
-            copied_board[i][j] = grid[i][j];
-        }
-    }
-    return copied_board;
-}
-bool winningMove(int**& grid, int p, int rows, int cols) {
-    int winSequence = 0; // to count adjacent pieces
-    // for horizontal checks
-    for (int c = 0; c < cols - 3; c++) { // for each column
-        for (int r = 0; r < rows; r++) { // each row
-            for (int i = 0; i < 4; i++) { // recall you need 4 to win
-                if (grid[r][c + i] == p) { // if not all pieces match
-                    winSequence++; // add sequence count
-                }
-                if (winSequence == 4) { return true; } // if 4 in row
-            }
-            winSequence = 0; // reset counter
-        }
-    }
-    // vertical checks
-    for (int c = 0; c < cols; c++) {
-        for (int r = rows - 1; r >= 3; r--) {
-            for (int i = 0; i < 4; i++) {
-                if (grid[r - i][c] == p) {
-                    winSequence++;
-                }
-                if (winSequence == 4) { return true; }
-            }
-            winSequence = 0;
-        }
-    }
-    // the below two are diagonal checks
-    for (int c = 0; c < cols - 3; c++) {
-        for (int r = rows - 1; r >= 3; r--) {
-            for (int i = 0; i < 4; i++) {
-                if (grid[r - i][c + i] == p) {
-                    winSequence++;
-                }
-                if (winSequence == 4) { return true; }
-            }
-            winSequence = 0;
-        }
-    }
-    for (int c = cols - 1; c >= 3; c--) {
-        for (int r = rows - 1; r >= 3; r--) {
-            for (int i = 0; i < 4; i++) {
-                if (grid[r - i][c - i] == p) {
-                    winSequence++;
-                }
-                if (winSequence == 4) { return true; }
-            }
-            winSequence = 0;
-        }
-    }
-    return false; // otherwise no winning move
-}
-int heurFunction(int good, int bad, int empty) {
-    int score = 0;
-    if (good == 4) { score += 500001; } // preference to go for winning move vs. block
-    else if (good == 3 && empty == 1) { score += 5000 + should_win; }
-    else if (good == 2 && empty == 2) { score += 500 + should_win; }
-    else if (bad == 2 && empty == 2) { score -= 500 + !should_win; } // preference to block
-    else if (bad == 3 && empty == 1) { score -= 5000 + !should_win; } // preference to block
-    else if (bad == 4) { score -= 500000; }
-    return score;
-}
-int scoreSet(int* set, int p) {
-    int good = 0; // points in favor of p
-    int bad = 0; // points against p
-    int empty = 0; // neutral spots
-    for (int i = 0; i < 4; i++) { // just enumerate how many of each
-        good += (set[i] == p) ? 1 : 0;
-        bad += (set[i] == 1 || set[i] == 2) ? 1 : 0;
-        empty += (set[i] == 0) ? 1 : 0;
-    }
-    // bad was calculated as (bad + good), so remove good
-    bad -= good;
-    return heurFunction(good, bad, empty);
-}
-int tabScore(int** grid, int p, int rows, int cols) {
-    int rs[rows], cs[cols], set[4], score = 0;
 
-    //Horizontal
-    for (int r = 0; r < rows; r++) {
-        for (int c = 0; c < cols; c++) {
-            rs[c] = grid[r][c]; // this is a distinct row alone
-        }
-        for (int c = 0; c < cols - 3; c++) {
-            for (int i = 0; i < 4; i++) {
-                set[i] = rs[c + i]; // for each possible "set" of 4 spots from that row
-            }
-            score += scoreSet(set, p); // find score
-        }
-    }
-    // vertical
-    for (int c = 0; c < cols; c++) {
-        for (int r = 0; r < rows; r++) {
-            cs[r] = grid[r][c];
-        }
-        for (int r = rows - 1; r >= 3; r--) {
-            for (int i = 0; i < 4; i++) {
-                set[i] = cs[r - i];
-            }
-            score += scoreSet(set, p);
-        }
-    }
-    // diagonals
-    for (int r = rows - 1; r >= 3; r--) {
-        for (int c = 0; c < cols; c++) {
-            rs[c] = grid[r][c];
-        }
-        for (int c = 0; c < cols - 3; c++) {
-            for (int i = 0; i < 4; i++) {
-                set[i] = grid[r - i][c + i];
-            }
-            score += scoreSet(set, p);
-        }
-    }
-    for (int r = rows - 1; r >= 3; r--) {
-        for (int c = 0; c < cols; c++) {
-            rs[c] = grid[r][c];
-        }
-        for (int c = cols - 1; c >= 3; c--) {
-            for (int i = 0; i < 4; i++) {
-                set[i] = grid[r - i][c - i];
-            }
-            score += scoreSet(set, p);
-        }
-    }
-    return score;
-}
-int* miniMax(int**& grid, int d, int alf, int bet, int p, int rows, int cols) {
-    if (d == 0 || d >= (rows * cols) - count) {
-        int* result = new int[2];
-        result[0] = tabScore(grid, 2, rows, cols);
-        result[1] = -1;
-        return result;
-    }
+class GameEnd {};
 
-    if (p == 2) {
-        int* movesSoFar = new int[2];
-        movesSoFar[0] = INT_MIN;
-        movesSoFar[1] = -1;
-        if (winningMove(grid, 1, rows, cols)) {
-            return movesSoFar;
-        }
-        for (int c = 0; c < cols; c++) { // for each possible move
-            if (grid[0][c] == 0) { // but only if that column is non-full
-                int** newBoard = copyBoard(grid, rows, cols); // make a copy of the board
-                makeMove(newBoard, c, p, rows, cols); // try the move
-                int* score = miniMax(newBoard, d - 1, alf, bet, 1, rows, cols); // find move based on that new board state
-                for (int i = 0; i < rows; i++) {
-                    delete[] newBoard[i];
-                }
-                delete[] newBoard;
-                if (score[0] > movesSoFar[0]) { // if better score, replace it, and consider that best move (for now)
-                    movesSoFar[0] = score[0];
-                    movesSoFar[1] = c;
-                }
-                delete[] score;
-                alf = max(alf, movesSoFar[0]);
-                if (alf >= bet) { break; } // for pruning
+class artificialIntelligence {
+public:
+    void makeMove(int**& grid, int col_num, int mark, int rows, int cols) {
+        for (int i = rows - 1; i >= 0; i--) {
+            if (grid[i][col_num] == 0) {
+                grid[i][col_num] = mark;
+                break;
             }
         }
-        return movesSoFar;
     }
-    else {
-        int* movesSoFar = new int[2];
-        movesSoFar[0] = INT_MAX;
-        movesSoFar[1] = -1;
-        if (winningMove(grid, 2, rows, cols)) {
-            return movesSoFar;
-        }
-        for (int c = 0; c < cols; c++) { // for each possible move
-            if (grid[0][c] == 0) { // but only if that column is non-full
-                int** newBoard = copyBoard(grid, rows, cols); // make a copy of the board
-                makeMove(newBoard, c, p, rows, cols); // try the move
-                int* score = miniMax(newBoard, d - 1, alf, bet, 2, rows, cols); // find move based on that new board state
-                for (int i = 0; i < rows; i++) {
-                    delete[] newBoard[i];
-                }
-                delete[] newBoard;
-                if (score[0] < movesSoFar[0]) { // if better score, replace it, and consider that best move (for now)
-                    movesSoFar[0] = score[0];
-                    movesSoFar[1] = c;
-                }
-                delete[] score;
-                bet = min(bet, movesSoFar[0]);
-                if (alf >= bet) { break; } // for pruning
+    int** copyBoard(int** grid, int rows, int cols) {
+        int** copied_board = new int* [rows];
+        for (int i = 0; i < rows; i++) {
+            copied_board[i] = new int[cols];
+            for (int j = 0; j < cols; j++) {
+                copied_board[i][j] = grid[i][j];
             }
         }
-        return movesSoFar;
+        return copied_board;
     }
-}
-int aiMove(int**& grid, int& d, int rows, int cols, int player) {
-    //cout << "ai move chal raha" << endl;
-    int* temp = miniMax(grid, d, 0 - INT_MAX, INT_MAX, player, rows, cols);
-    int temp2 = temp[1];
-    delete[] temp;
-    return temp2;
-}
+    bool winningMove(int**& grid, int mark, int rows, int cols) {
+        int winPattern = 0; // to count adjacent pieces
+        // for horizontal checks
+        for (int column = 0; column < cols - 3; column++) { // for each column
+            for (int row = 0; row < rows; row++) { // each row
+                for (int i = 0; i < 4; i++) { // recall you need 4 to win
+                    if (grid[row][column + i] == mark) { // if not all pieces match
+                        winPattern++; // add sequence count
+                    }
+                    if (winPattern == 4) {
+                        return true;
+                    } // if 4 in row
+                }
+                winPattern = 0; // reset counter
+            }
+        }
+        // vertical checks
+        for (int column = 0; column < cols; column++) {
+            for (int row = rows - 1; row >= 3; row--) {
+                for (int i = 0; i < 4; i++) {
+                    if (grid[row - i][column] == mark) {
+                        winPattern++;
+                    }
+                    if (winPattern == 4) { return true; }
+                }
+                winPattern = 0;
+            }
+        }
+        // the below two are diagonal checks
+        for (int column = 0; column < cols - 3; column++) {
+            for (int row = rows - 1; row >= 3; row--) {
+                for (int i = 0; i < 4; i++) {
+                    if (grid[row - i][column + i] == mark) {
+                        winPattern++;
+                    }
+                    if (winPattern == 4) { return true; }
+                }
+                winPattern = 0;
+            }
+        }
+        for (int column = cols - 1; column >= 3; column--) {
+            for (int row = rows - 1; row >= 3; row--) {
+                for (int i = 0; i < 4; i++) {
+                    if (grid[row - i][column - i] == mark) {
+                        winPattern++;
+                    }
+                    if (winPattern == 4) { return true; }
+                }
+                winPattern = 0;
+            }
+        }
+        return false; // otherwise no winning move
+    }
+    int heurFunction(int good, int bad, int empty) {
+        int score = 0;
+        if (good == 4) { score += 500001; } // preference to go for winning move vs. block
+        else if (good == 3 && empty == 1) { score += 5000 + should_win; }
+        else if (good == 2 && empty == 2) { score += 500 + should_win; }
+        else if (bad == 2 && empty == 2) { score -= 500 + !should_win; } // preference to block
+        else if (bad == 3 && empty == 1) { score -= 5000 + !should_win; } // preference to block
+        else if (bad == 4) { score -= 500000; }
+        return score;
+    }
+    int scoreSet(int* set, int mark) {
+        int good = 0; // points in favor of mark
+        int bad = 0; // points against mark
+        int empty = 0; // neutral spots
+        for (int i = 0; i < 4; i++) { // just enumerate how many of each
+            if (set[i] == mark) {
+                good += 1;
+            }
+            else {
+                good += 0;
+            }
 
+            if (set[i] == 1 || set[i] == 2) {
+                bad += 1;
+            }
+            else {
+                bad += 0;
+            }
+            if (set[i] == 0) {
+                empty += 1;
+            }
+            else {
+                empty += 0;
+            }
+        }
+        // bad was calculated as (bad + good), so remove good
+        bad -= good;
+        return heurFunction(good, bad, empty);
+    }
+    int tabScore(int** grid, int mark, int rows, int cols) {
+        int row_arr[rows], column_arr[cols], set[4], score = 0;
+
+        //Horizontal
+        for (int row = 0; row < rows; row++) {
+            for (int column = 0; column < cols; column++) {
+                row_arr[column] = grid[row][column]; // this is a distinct row alone
+            }
+            for (int column = 0; column < cols - 3; column++) {
+                for (int i = 0; i < 4; i++) {
+                    set[i] = row_arr[column + i]; // for each possible "set" of 4 spots from that row
+                }
+                score += scoreSet(set, mark); // find score
+            }
+        }
+        // vertical
+        for (int column = 0; column < cols; column++) {
+            for (int row = 0; row < rows; row++) {
+                column_arr[row] = grid[row][column];
+            }
+            for (int row = rows - 1; row >= 3; row--) {
+                for (int i = 0; i < 4; i++) {
+                    set[i] = column_arr[row - i];
+                }
+                score += scoreSet(set, mark);
+            }
+        }
+        // diagonals
+        for (int row = rows - 1; row >= 3; row--) {
+            for (int column = 0; column < cols; column++) {
+                row_arr[column] = grid[row][column];
+            }
+            for (int column = 0; column < cols - 3; column++) {
+                for (int i = 0; i < 4; i++) {
+                    set[i] = grid[row - i][column + i];
+                }
+                score += scoreSet(set, mark);
+            }
+        }
+        for (int row = rows - 1; row >= 3; row--) {
+            for (int column = 0; column < cols; column++) {
+                row_arr[column] = grid[row][column];
+            }
+            for (int column = cols - 1; column >= 3; column--) {
+                for (int i = 0; i < 4; i++) {
+                    set[i] = grid[row - i][column - i];
+                }
+                score += scoreSet(set, mark);
+            }
+        }
+        return score;
+    }
+    int* miniMax(int**& grid, int depth, int alf, int bet, int mark, int rows, int cols) {
+        if (depth == 0 || depth >= (rows * cols) - count) {
+            int* result = new int[2];
+            result[0] = tabScore(grid, 2, rows, cols);
+            result[1] = -1;
+            return result;
+        }
+
+        if (mark == 2) {
+            int* movesDoneTillNow = new int[2];
+            movesDoneTillNow[0] = INT_MIN;
+            movesDoneTillNow[1] = -1;
+            if (winningMove(grid, 1, rows, cols)) {
+                return movesDoneTillNow;
+            }
+            for (int column = 0; column < cols; column++) { // for each possible move
+                if (grid[0][column] == 0) { // but only if that column is non-full
+                    int** updatedBoard = copyBoard(grid, rows, cols); // make a copy of the board
+                    makeMove(updatedBoard, column, mark, rows, cols); // try the move
+                    int* score = miniMax(updatedBoard, depth - 1, alf, bet, 1, rows, cols); // find move based on that new board state
+                    for (int i = 0; i < rows; i++) {
+                        delete[] updatedBoard[i];
+                    }
+                    delete[] updatedBoard;
+                    if (score[0] > movesDoneTillNow[0]) { // if better score, replace it, and consider that best move (for now)
+                        movesDoneTillNow[0] = score[0];
+                        movesDoneTillNow[1] = column;
+                    }
+                    delete[] score;
+                    alf = max(alf, movesDoneTillNow[0]);
+                    if (alf >= bet) {
+                        break;
+                    } // for pruning
+                }
+            }
+            return movesDoneTillNow;
+        }
+        else {
+            int* movesDoneTillNow = new int[2];
+            movesDoneTillNow[0] = INT_MAX;
+            movesDoneTillNow[1] = -1;
+            if (winningMove(grid, 2, rows, cols)) {
+                return movesDoneTillNow;
+            }
+            for (int column = 0; column < cols; column++) { // for each possible move
+                if (grid[0][column] == 0) { // but only if that column is non-full
+                    int** updatedBoard = copyBoard(grid, rows, cols); // make a copy of the board
+                    makeMove(updatedBoard, column, mark, rows, cols); // try the move
+                    int* score = miniMax(updatedBoard, depth - 1, alf, bet, 2, rows, cols); // find move based on that new board state
+                    for (int i = 0; i < rows; i++) {
+                        delete[] updatedBoard[i];
+                    }
+                    delete[] updatedBoard;
+                    if (score[0] < movesDoneTillNow[0]) { // if better score, replace it, and consider that best move (for now)
+                        movesDoneTillNow[0] = score[0];
+                        movesDoneTillNow[1] = column;
+                    }
+                    delete[] score;
+                    bet = min(bet, movesDoneTillNow[0]);
+                    if (alf >= bet) {
+                        break;
+                    } // for pruning
+                }
+            }
+            return movesDoneTillNow;
+        }
+    }
+    int aiMove(int**& grid, int& depth, int rows, int cols, int player) {
+        int* temp = miniMax(grid, depth, 0 - INT_MAX, INT_MAX, player, rows, cols);
+        int temp2 = temp[1];
+        delete[] temp;
+        return temp2;
+    }
+};
 
 class GameBoard {
 private:
@@ -453,6 +471,8 @@ class twoPlayer : public GameBoard {
     int yellowTex_number = 2;
     int redTex_number = 1;
     int column_num = 0;
+    Font customFont = LoadFont("Roboto-Regular.ttf");
+    artificialIntelligence Ai;
 public:
     twoPlayer() {
         grid = new int* [getRows()];
@@ -506,6 +526,7 @@ public:
 
         if (count % 2 != 0) {
             int animation = 0;
+            cout << "difficulty = " << difficulty << endl;
             // //Checking AI vs AI (only for checking purposes)
             // column_num = aiMove(grid, difficulty, getRows(), getCols(), 2);
             // while (column_num == -1) {
@@ -526,7 +547,7 @@ public:
             //     }
             // }
             while (animation <= row[column_num]) {
-                ClearBackground(RAYWHITE);
+                ClearBackground(BLACK);
                 Tex_arr[animation][column_num] = yellowTex;
                 if (animation > 0) { Tex_arr[animation - 1][column_num] = getEmptyTexture(); }
                 WaitTime(0.05);
@@ -536,13 +557,13 @@ public:
             }
             grid[row[column_num]][column_num] = 1;
             row[column_num]--;
-            cout << "Idher pohanchaa count =" << count << endl;//but not reaching here on my click
         }
 
         else if (count % 2 == 0) {
+            cout << "difficulty = " << difficulty << endl;
             int animation = 0;
             while (animation <= row[column_num]) {
-                ClearBackground(RAYWHITE);
+                ClearBackground(BLACK);
                 Tex_arr[animation][column_num] = redTex;
                 if (animation > 0) { Tex_arr[animation - 1][column_num] = getEmptyTexture(); }
                 WaitTime(0.05);
@@ -556,10 +577,16 @@ public:
         }
         if (count == getRows() * getCols()) {
             BeginDrawing();
-            ClearBackground(RAYWHITE);
-            //Iss jaga pe draw image design kar ke daalni hain
+            ClearBackground(BLACK);
+            Texture2D drawTexture = LoadTexture("draw.png");
+            Rectangle draw = texturePage_math(drawTexture);
+            DrawTexturePro(drawTexture, { 0,0,static_cast<float>(drawTexture.width),static_cast<float>(drawTexture.height) },
+                draw,
+                { 0,0 },
+                0,
+                WHITE);
             EndDrawing();
-            WaitTime(5.0);
+            WaitTime(3.0);
             throw GameEnd();
         }
         int win_row = 0, win_col = 0;
@@ -612,22 +639,48 @@ public:
             }
             Draw();
             EndDrawing();
-            WaitTime(2.0);
+            WaitTime(1.0);
             BeginDrawing();
-            ClearBackground(RAYWHITE);
-            //Iss jaga pe if statements ke saath ending images design kar ke daalni hain
+            ClearBackground(BLACK);
+            if (mark == 1) {
+                Texture2D player1wins_texture = LoadTexture("player1wins.png");
+                Rectangle player1 = texturePage_math(player1wins_texture);
+                DrawTexturePro(player1wins_texture, { 0,0,static_cast<float>(player1wins_texture.width),static_cast<float>(player1wins_texture.height) },
+                    player1,
+                    { 0,0 },
+                    0,
+                    WHITE);
+            }
+            else if (mark == 2 && !AI) {
+                Texture2D player2wins_texture = LoadTexture("player2wins.png");
+                Rectangle player2 = texturePage_math(player2wins_texture);
+                DrawTexturePro(player2wins_texture, { 0,0,static_cast<float>(player2wins_texture.width),static_cast<float>(player2wins_texture.height) },
+                    player2,
+                    { 0,0 },
+                    0,
+                    WHITE);
+            }
+            else if (mark == 2 && AI) {
+                Texture2D aiwins_texture = LoadTexture("aiwins.png");
+                Rectangle ai = texturePage_math(aiwins_texture);
+                DrawTexturePro(aiwins_texture, { 0,0,static_cast<float>(aiwins_texture.width),static_cast<float>(aiwins_texture.height) },
+                    ai,
+                    { 0,0 },
+                    0,
+                    WHITE);
+            }
             EndDrawing();
-            WaitTime(5.0);
+            WaitTime(3.0);
             throw GameEnd();
         }
 
         if (AI && count % 2 != 0) {
-            int aiCol = aiMove(grid, difficulty, getRows(), getCols(), 2);
+            int aiCol = Ai.aiMove(grid, difficulty, getRows(), getCols(), 2);
             cout << "Column number from AI " << aiCol << endl;
             while (aiCol == -1) {
                 difficulty -= 1;
                 if (difficulty != 0) {
-                    aiCol = aiMove(grid, difficulty, getRows(), getCols(), 2);
+                    aiCol = Ai.aiMove(grid, difficulty, getRows(), getCols(), 2);
                     cout << "Column number from AI " << aiCol << endl;
                 }
                 else {
@@ -733,21 +786,38 @@ public:
             int font_size = texture_size * 0.6;
 
             if (COLS >= 6) {
-                DrawText("A", GetGridCenterX(0) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
-                DrawText("I", GetGridCenterX(1) - font_size / 8, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+                DrawTextEx(customFont, "A", { static_cast<float>(GetGridCenterX(0) - font_size * 0.3125), (GetGridCenterY(0) - font_size / 2) }, font_size, 0, WHITE);
+                DrawTextEx(customFont, "I", { GetGridCenterX(1) - font_size / 8, GetGridCenterY(0) - font_size / 2 }, font_size, 0, WHITE);
 
-                DrawText("G", GetGridCenterX(COLS - 4) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
-                DrawText("A", GetGridCenterX(COLS - 3) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
-                DrawText("M", GetGridCenterX(COLS - 2) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
-                DrawText("E", GetGridCenterX(COLS - 1) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+                DrawTextEx(customFont, "G", { static_cast<float>(GetGridCenterX(COLS - 4) - font_size * 0.3125), GetGridCenterY(0) - font_size / 2 }, font_size, 0, WHITE);
+                DrawTextEx(customFont, "A", { static_cast<float>(GetGridCenterX(COLS - 3) - font_size * 0.3125), GetGridCenterY(0) - font_size / 2 }, font_size, 0, WHITE);
+                DrawTextEx(customFont, "M", { static_cast<float>(GetGridCenterX(COLS - 2) - font_size * 0.3125), GetGridCenterY(0) - font_size / 2 }, font_size, 0, WHITE);
+                DrawTextEx(customFont, "E", { static_cast<float>(GetGridCenterX(COLS - 1) - font_size * 0.3125), GetGridCenterY(0) - font_size / 2 }, font_size, 0, WHITE);
             }
             else if (COLS >= 2) {
-                DrawText("A", GetGridCenterX(COLS / 2 - 1) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
-                DrawText("I", GetGridCenterX(COLS / 2) - font_size / 8, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+                DrawTextEx(customFont, "A", { static_cast<float>(GetGridCenterX(COLS / 2 - 1) - font_size * 0.3125), GetGridCenterY(0) - font_size / 2 }, font_size, 0, WHITE);
+                DrawTextEx(customFont, "I", { GetGridCenterX(COLS / 2) - font_size / 8, GetGridCenterY(0) - font_size / 2 }, font_size, 0, WHITE);
             }
             else {
-                DrawText("AI", GetGridCenterX(0) - font_size * 0.21875, GetGridCenterY(0) - font_size / 4, font_size / 2, WHITE);
+                DrawTextEx(customFont, "AI", { static_cast<float>(GetGridCenterX(0) - font_size * 0.21875), GetGridCenterY(0) - font_size / 4 }, font_size / 2, 0, WHITE);
             }
+
+            // if (COLS >= 6) {
+            //     DrawText("A", GetGridCenterX(0) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+            //     DrawText("I", GetGridCenterX(1) - font_size / 8, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+
+            //     DrawText("G", GetGridCenterX(COLS - 4) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+            //     DrawText("A", GetGridCenterX(COLS - 3) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+            //     DrawText("M", GetGridCenterX(COLS - 2) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+            //     DrawText("E", GetGridCenterX(COLS - 1) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+            // }
+            // else if (COLS >= 2) {
+            //     DrawText("A", GetGridCenterX(COLS / 2 - 1) - font_size * 0.3125, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+            //     DrawText("I", GetGridCenterX(COLS / 2) - font_size / 8, GetGridCenterY(0) - font_size / 2, font_size, WHITE);
+            // }
+            // else {
+            //     DrawText("AI", GetGridCenterX(0) - font_size * 0.21875, GetGridCenterY(0) - font_size / 4, font_size / 2, WHITE);
+            // }
         }
     }
 };
@@ -760,14 +830,13 @@ int main() {
 
     Texture2D textureLoadPage = LoadTexture("coverPage.png");
     Texture2D textureStartPage = LoadTexture("StartPage.png");
-
+    Texture2D textureLevelPage = LoadTexture("LevelPage.png");
+    Texture2D textureInstructionsPage = LoadTexture("instructions.png");
     //For 3 seconds delay first
     float elapsedTime = 0.0f;
     const float duration = 3.0f;
 
     int count_ignore_unload_texture = 1;
-
-    Color darkBrightRed = { 200, 0, 0, 255 };
 
     SetTargetFPS(60);
 
@@ -776,11 +845,8 @@ int main() {
 
         elapsedTime += GetFrameTime();
 
-        Rectangle rect = { float((GetScreenWidth() / 2) - (GetScreenWidth() / 11)), float(GetScreenHeight() / 8), float(GetScreenWidth() / 5), float(GetScreenHeight() / 10) };
-
-        Rectangle destination_Load = textureStartPage_math(textureLoadPage);
+        Rectangle destination_Load = textureLoadPage_math(textureLoadPage);
         Rectangle destination_Start = textureStartPage_math(textureStartPage);
-        Rectangle rec = textureRectangle_math(rect);
 
         BeginDrawing();
         if (elapsedTime < duration) {
@@ -808,24 +874,25 @@ int main() {
                 WHITE); // Here to draw i.e. destination
 
             //Single Player
-            DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 8, rec.width, rec.height, darkBrightRed);
+            DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 8, GetScreenWidth() / 5, GetScreenHeight() / 10, darkBrightRed);
             DrawText("Single Player", (GetScreenWidth() / 2) - (GetScreenWidth() / 11) + 10, GetScreenHeight() / 8 + 10, GetScreenWidth() / 38, WHITE);
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 int clicked = 0;
                 float mouseX = GetMouseX();
                 float mouseY = GetMouseY();
-                Rectangle rect = { (float)(GetScreenWidth() / 2) - (GetScreenWidth() / 11), (float)GetScreenHeight() / 8, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
+                float button_x = destination_Start.x + (destination_Start.width * 0.37), button_y = destination_Start.y + (destination_Start.height * 0.276), width = (destination_Start.width * 0.262), height = (destination_Start.height * 0.072);
+                Rectangle rect = { button_x, button_y , width, height };
 
                 if (CheckCollisionPointRec({ mouseX, mouseY }, rect)) {
                     count = 0, difficulty = 0;
                     cout << "Artificial Intelligence" << endl;
-                    select_level(textureStartPage, destination_Start, clicked);
+                    select_level(textureLevelPage, destination_Start, clicked);
 
                     twoPlayer twoPlayerGame(true);
                     try {
                         while (!WindowShouldClose()) {
                             BeginDrawing();
-                            ClearBackground(RAYWHITE);
+                            ClearBackground(BLACK);
 
                             twoPlayerGame.Draw();
                             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && (clicked >= 2) && count % 2 == 0) {
@@ -847,13 +914,12 @@ int main() {
 
 
             //Two Player
-            DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 4, GetScreenWidth() / 5, GetScreenHeight() / 10, darkBrightRed);
-            DrawText("Two Player", (GetScreenWidth() / 2) - (GetScreenWidth() / 11) + 10, GetScreenHeight() / 4 + 10, GetScreenWidth() / 38, WHITE);
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 int clicked = 0;
                 float mouseX = GetMouseX();
                 float mouseY = GetMouseY();
-                Rectangle rect = { (float)(GetScreenWidth() / 2) - (GetScreenWidth() / 11), (float)GetScreenHeight() / 4, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
+                float button_x = destination_Start.x + (destination_Start.width * 0.37), button_y = destination_Start.y + (destination_Start.height * 0.396), width = (destination_Start.width * 0.262), height = (destination_Start.height * 0.072);
+                Rectangle rect = { button_x, button_y , width, height };
 
                 if (CheckCollisionPointRec({ mouseX, mouseY }, rect)) {
                     count = 0;
@@ -864,7 +930,7 @@ int main() {
                     try {
                         while (!WindowShouldClose()) {
                             BeginDrawing();
-                            ClearBackground(RAYWHITE);
+                            ClearBackground(BLACK);
 
                             twoPlayerGame.Draw();
                             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && clicked) {
@@ -884,26 +950,35 @@ int main() {
 
 
             //Instructions
-            DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 2.7, GetScreenWidth() / 5, GetScreenHeight() / 10, darkBrightRed);
-            DrawText("Instructions", (GetScreenWidth() / 2) - (GetScreenWidth() / 11) + 10, GetScreenHeight() / 2.7 + 10, GetScreenWidth() / 38, WHITE);
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 float mouseX = GetMouseX();
                 float mouseY = GetMouseY();
-                Rectangle rect = { (float)(GetScreenWidth() / 2) - (GetScreenWidth() / 11), (float)GetScreenHeight() / 2.7f, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
+                float button_x = destination_Start.x + (destination_Start.width * 0.37), button_y = destination_Start.y + (destination_Start.height * 0.517), width = (destination_Start.width * 0.262), height = (destination_Start.height * 0.072);
+                Rectangle rect = { button_x, button_y, width, height };
 
                 if (CheckCollisionPointRec({ mouseX, mouseY }, rect)) {
+                    while (!WindowShouldClose()) {
+                        BeginDrawing();
+                        ClearBackground(BLACK);
+                        Rectangle instructions = texturePage_math(textureInstructionsPage);
+                        DrawTexturePro(textureInstructionsPage, { 0,0,static_cast<float>(textureInstructionsPage.width),static_cast<float>(textureInstructionsPage.height) },
+                            instructions,
+                            { 0,0 },
+                            0,
+                            WHITE);
+                        EndDrawing();
+                    }
                     cout << "Ruk Mai Tere ko Batata hun ! " << endl;
                 }
             }
 
 
             //Exit
-            DrawRectangle((GetScreenWidth() / 2) - (GetScreenWidth() / 11), GetScreenHeight() / 2, GetScreenWidth() / 5, GetScreenHeight() / 10, darkBrightRed);
-            DrawText("Exit", (GetScreenWidth() / 2) - (GetScreenWidth() / 11) + 10, GetScreenHeight() / 2 + 10, GetScreenWidth() / 38, WHITE);
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 float mouseX = GetMouseX();
                 float mouseY = GetMouseY();
-                Rectangle rect = { (float)(GetScreenWidth() / 2) - (GetScreenWidth() / 11), (float)GetScreenHeight() / 2, (float)GetScreenWidth() / 5, (float)GetScreenHeight() / 10 };
+                float button_x = destination_Start.x + (destination_Start.width * 0.37), button_y = destination_Start.y + (destination_Start.height * 0.637), width = (destination_Start.width * 0.262), height = (destination_Start.height * 0.072);
+                Rectangle rect = { button_x, button_y , width, height };
 
                 if (CheckCollisionPointRec({ mouseX, mouseY }, rect)) {
                     cout << "Tata goodbye khatam ! " << endl;
@@ -911,7 +986,7 @@ int main() {
                 }
             }
         }
-        ClearBackground(RAYWHITE);
+        ClearBackground(BLACK);
         EndDrawing();
     }
 
